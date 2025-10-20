@@ -106,9 +106,10 @@ export const ReportsBIPage = () => {
                 outerRadius={80}
                 label
               >
-                {tecnicosDestacados.map((entry, index) => (
-                  <Cell key={index} fill={COLORS[index % COLORS.length]} />
-                ))}
+             {tecnicosDestacados.map((_, index) => (
+  <Cell key={index} fill={COLORS[index % COLORS.length]} />
+))}
+
               </Pie>
               <Tooltip />
               <Legend />
