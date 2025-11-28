@@ -17,7 +17,8 @@ export const sections: Section[] = [
     items: [
       { label: "Bitácora", to: "/admin/bitacora" },
       { label: "Lista de Usuarios", to: "/admin/listausuario" },
-
+      { label: "registar Tecnico", to: "/admin/registertecnico" },
+      { label: "Activar Tecnico", to: "/admin/activarTecnico" },
     ],
   },
    {
@@ -28,6 +29,8 @@ export const sections: Section[] = [
 
 
       { label: "Tecnicos", to: "/admin/technicians" },
+      { label: "Categoria", to: "/admin/categoria" },
+
     ],
   },
    {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   BarChart,
   Bar,
@@ -12,30 +12,55 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import {
+  getIngresosPorZona,
+  getClientesRecurrentes,
+  getTecnicosDestacados,
+  type IngresosPorZona,
+  type ClienteRecurrente,
+  type TecnicoDestacado,
+} from "../../../api/reportes";
 
 export const ReportsBIPage = () => {
-  const [selectedPeriod, setSelectedPeriod] = useState("Semanal");
+  const [selectedPeriod, setSelectedPeriod] = useState<"semana" | "mes" | "trimestral">("mes");
+  const [loading, setLoading] = useState(true);
+  const [ingresosPorZona, setIngresosPorZona] = useState<IngresosPorZona["datos"]>([]);
+  const [clientesRecurrentes, setClientesRecurrentes] = useState<ClienteRecurrente[]>([]);
+  const [tecnicosDestacados, setTecnicosDestacados] = useState<TecnicoDestacado[]>([]);
 
-  // 🔹 Datos estáticos simulados
-  const ingresosPorZona = [
-    { zona: "Zona 1", ingresos: 480 },
-    { zona: "Zona 2", ingresos: 260 },
-    { zona: "Zona 3", ingresos: 180 },
-  ];
+  useEffect(() => {
+    cargarDatos();
+  }, [selectedPeriod]);
 
-  const clientesRecurrentes = [
-    { cliente: "Cliente A", cantidad: 40 },
-    { cliente: "Cliente B", cantidad: 30 },
-    { cliente: "Cliente C", cantidad: 25 },
-    { cliente: "Cliente D", cantidad: 20 },
-  ];
+  const cargarDatos = async () => {
+    setLoading(true);
+    try {
+      const [ingresos, clientes, tecnicos] = await Promise.all([
+        getIngresosPorZona(selectedPeriod),
+        getClientesRecurrentes(),
+        getTecnicosDestacados(),
+      ]);
 
-  const tecnicosDestacados = [
-    { name: "Luis Gómez", value: 70 },
-    { name: "Otros", value: 30 },
-  ];
+      setIngresosPorZona(ingresos.datos);
+      setClientesRecurrentes(clientes.clientes);
+      setTecnicosDestacados(tecnicos.tecnicos);
+    } catch (error) {
+      console.error("Error cargando reportes:", error);
+      alert("Error cargando reportes");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const COLORS = ["#3B82F6", "#A5B4FC"];
+  const COLORS = ["#3B82F6", "#A5B4FC", "#60A5FA", "#93C5FD", "#DBEAFE"];
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <p>Cargando reportes...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-indigo-100/70 dark:border-slate-800">
@@ -47,12 +72,12 @@ export const ReportsBIPage = () => {
         {/* Selector temporal */}
         <select
           value={selectedPeriod}
-          onChange={(e) => setSelectedPeriod(e.target.value)}
+          onChange={(e) => setSelectedPeriod(e.target.value as "semana" | "mes" | "trimestral")}
           className="border border-gray-300 dark:border-slate-700 rounded-md px-3 py-2 text-sm bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200"
         >
-          <option>Semanal</option>
-          <option>Mensual</option>
-          <option>Trimestral</option>
+          <option value="semana">Semanal</option>
+          <option value="mes">Mensual</option>
+          <option value="trimestral">Trimestral</option>
         </select>
       </div>
 
@@ -80,7 +105,7 @@ export const ReportsBIPage = () => {
             Clientes Recurrentes
           </h3>
           <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={clientesRecurrentes}>
+            <BarChart data={clientesRecurrentes.map(c => ({ cliente: `${c.nombre} ${c.apellido}`, cantidad: c.cantidad }))}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="cliente" />
               <YAxis />
@@ -98,7 +123,7 @@ export const ReportsBIPage = () => {
           <ResponsiveContainer width="100%" height={220}>
             <PieChart>
               <Pie
-                data={tecnicosDestacados}
+                data={tecnicosDestacados.map(t => ({ name: `${t.nombre} ${t.apellido}`, value: t.total_servicios }))}
                 dataKey="value"
                 nameKey="name"
                 cx="50%"

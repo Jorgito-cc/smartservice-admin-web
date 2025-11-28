@@ -2,38 +2,51 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
-//  Esquema de validación con Zod
-const schema = z.object({
-  name: z.string().min(2, "El nombre es obligatorio"),
+// ESQUEMA PARA LOGIN
+const loginSchema = z.object({
   email: z.string().email("Correo inválido"),
   password: z.string().min(6, "Debe tener al menos 6 caracteres"),
 });
 
-export type AuthFormData = z.infer<typeof schema>;
+export type LoginFormData = z.infer<typeof loginSchema>;
 
 export function useAuthVM() {
+  const { login } = useAuth();
+  const navigate = useNavigate();   // <-- IMPORTANTE
+
   const [isOpen, setIsOpen] = useState(false);
-  const { register, handleSubmit, reset, formState } = useForm<AuthFormData>({
-    resolver: zodResolver(schema),
+
+  const { register, handleSubmit, reset, formState } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = (data: AuthFormData) => {
-    console.log("Formulario enviado:", data);
-    console.log("JSON:", JSON.stringify(data, null, 2));
+  const onSubmit = async (data: LoginFormData) => {
+    try {
+      const res = await login({
+        email: data.email,
+        password: data.password,
+      });
 
-    alert(`Bienvenido, ${data.name}!`);
-    reset();
-    setIsOpen(false);
+      alert(`Bienvenido, ${res.usuario.nombre}!`);
+
+      reset();
+      setIsOpen(false);
+
+      // 🚀🚀 REDIRECCIÓN AQUÍ
+      navigate("/admin");
+
+    } catch (error: any) {
+      alert(error.message || "Error iniciando sesión");
+    }
   };
-
-  const openModal = () => setIsOpen(true);
-  const closeModal = () => setIsOpen(false);
 
   return {
     isOpen,
-    openModal,
-    closeModal,
+    openModal: () => setIsOpen(true),
+    closeModal: () => setIsOpen(false),
     register,
     handleSubmit,
     onSubmit,
