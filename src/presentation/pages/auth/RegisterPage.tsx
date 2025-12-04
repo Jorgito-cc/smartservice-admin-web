@@ -27,7 +27,7 @@ export const RegisterPage = () => {
 
     try {
       await register(formData);
-      navigate("/login");
+      navigate("/");
     } catch (err: any) {
       setError(err.message || "Error al registrarse");
     } finally {
@@ -147,7 +147,7 @@ export const RegisterPage = () => {
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
             ¿Ya tienes cuenta?{" "}
-            <a href="/login" className="text-indigo-600 hover:underline">
+            <a href="/" className="text-indigo-600 hover:underline">
               Inicia sesión
             </a>
           </p>

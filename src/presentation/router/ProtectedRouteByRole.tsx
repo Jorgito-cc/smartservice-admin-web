@@ -15,7 +15,7 @@ export default function ProtectedRouteByRole({ children, allowedRoles }: Protect
 
   // Verificar que el usuario tenga un rol válido
   if (!user || !user.rol) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   // Normalizar el rol (en caso de que venga con mayúsculas o espacios)
@@ -33,7 +33,7 @@ export default function ProtectedRouteByRole({ children, allowedRoles }: Protect
         <p className="mb-2"><strong>Rol Original:</strong> "{user.rol}"</p>
         <p className="text-sm text-gray-500">Por favor comparte esta pantalla con el soporte.</p>
         <button
-          onClick={() => window.location.href = '/login'}
+          onClick={() => window.location.href = '/'}
           className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded"
         >
           Volver al Login
