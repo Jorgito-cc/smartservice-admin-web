@@ -25,9 +25,19 @@ export const DashboardTecnicoPage = () => {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Dashboard Técnico</h1>
-        <p className="text-gray-600">Bienvenido de vuelta</p>
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800">Dashboard Técnico</h1>
+          <p className="text-gray-600">Bienvenido de vuelta</p>
+        </div>
+        <button
+          onClick={cargarDatos}
+          disabled={loading}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+        >
+          <FaList className={loading ? "animate-spin" : ""} />
+          {loading ? "Actualizando..." : "Actualizar Datos"}
+        </button>
       </div>
 
       {/* Estadísticas */}

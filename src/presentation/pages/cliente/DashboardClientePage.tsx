@@ -29,14 +29,27 @@ export const DashboardClientePage = () => {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
-        <button
-          onClick={() => navigate("/cliente/solicitar")}
-          className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex items-center"
-        >
-          <FaPlusCircle className="mr-2" />
-          Nueva Solicitud
-        </button>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
+          <p className="text-gray-600">Bienvenido de vuelta</p>
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={cargarSolicitudes}
+            disabled={loading}
+            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition flex items-center gap-2"
+          >
+            <FaClock className={loading ? "animate-spin" : ""} />
+            {loading ? "..." : "Actualizar"}
+          </button>
+          <button
+            onClick={() => navigate("/cliente/solicitar")}
+            className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex items-center"
+          >
+            <FaPlusCircle className="mr-2" />
+            Nueva Solicitud
+          </button>
+        </div>
       </div>
 
       {/* Estadísticas */}
@@ -99,12 +112,11 @@ export const DashboardClientePage = () => {
                   <p className="font-medium text-gray-800">{solicitud.categoria?.nombre}</p>
                   <p className="text-sm text-gray-600 truncate max-w-md">{solicitud.descripcion}</p>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  solicitud.estado === "completado" ? "bg-green-100 text-green-800" :
-                  solicitud.estado === "asignado" || solicitud.estado === "en_proceso" ? "bg-blue-100 text-blue-800" :
-                  solicitud.estado === "con_ofertas" ? "bg-yellow-100 text-yellow-800" :
-                  "bg-gray-100 text-gray-800"
-                }`}>
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${solicitud.estado === "completado" ? "bg-green-100 text-green-800" :
+                    solicitud.estado === "asignado" || solicitud.estado === "en_proceso" ? "bg-blue-100 text-blue-800" :
+                      solicitud.estado === "con_ofertas" ? "bg-yellow-100 text-yellow-800" :
+                        "bg-gray-100 text-gray-800"
+                  }`}>
                   {solicitud.estado}
                 </span>
               </div>
