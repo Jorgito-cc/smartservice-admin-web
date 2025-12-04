@@ -11,6 +11,7 @@ import { initSocket, disconnectSocket } from "../utils/socket";
 type AuthContextType = {
   user: UserDTO | null;
   isAuthenticated: boolean;
+  loading: boolean;
   login: (payload: LoginRequest) => Promise<AuthResponse>;
   register: (payload: RegisterRequest) => Promise<AuthResponse>;
   logout: () => void;
@@ -20,9 +21,11 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<UserDTO | null>(getSessionUser());
+  // Inicializar user SÍNCRONAMENTE desde localStorage
+  const [user, setUser] = useState<UserDTO | null>(() => getSessionUser());
+  const [loading, setLoading] = useState(true);
 
-  // Inicializar Socket.IO si hay usuario logueado
+  // Inicializar Socket.IO después del primer render
   useEffect(() => {
     const currentUser = getSessionUser();
     if (currentUser) {
@@ -31,12 +34,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         initSocket(token, currentUser.id_usuario);
       }
     }
+    // Marcar como cargado después de inicializar socket
+    setLoading(false);
   }, []);
 
   const login = async (payload: LoginRequest) => {
     const res = await loginRequest(payload);
     setUser(res.usuario);
-    
+
     // Inicializar Socket.IO después del login
     if (res.usuario?.id_usuario) {
       const token = localStorage.getItem("token");
@@ -44,7 +49,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         initSocket(token, res.usuario.id_usuario);
       }
     }
-    
+
     return res;
   };
 
@@ -67,8 +72,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const value = useMemo(
-    () => ({ user, isAuthenticated: !!user, login, register, logout, refreshPerfil }),
-    [user]
+    () => ({ user, isAuthenticated: !!user, loading, login, register, logout, refreshPerfil }),
+    [user, loading]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

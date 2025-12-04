@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { api } from "../../../api/axios";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { getSocket } from "../../../utils/socket";
@@ -29,6 +30,20 @@ export const ChatGrupalPage = () => {
   const socket = getSocket();
 
   useEffect(() => {
+    // Cargar historial de mensajes
+    const cargarHistorial = async () => {
+      try {
+        const { data } = await api.get(`/chat/solicitud/${id}`);
+        setMensajes(data);
+      } catch (error) {
+        console.error("Error cargando historial:", error);
+      }
+    };
+
+    if (id) {
+      cargarHistorial();
+    }
+
     if (socket && id) {
       // Unirse a la sala de la solicitud
       socket.emit("joinSolicitudChat", { id_solicitud: id });
