@@ -35,8 +35,18 @@ export function useAuthVM() {
       reset();
       setIsOpen(false);
 
-      // 🚀🚀 REDIRECCIÓN AQUÍ
-      navigate("/admin");
+      // 🚀🚀 REDIRECCIÓN SEGÚN ROL
+      const userRol = res.usuario.rol.trim().toLowerCase();
+
+      if (userRol === "admin") {
+        navigate("/admin");
+      } else if (userRol === "cliente") {
+        navigate("/cliente");
+      } else if (userRol === "tecnico") {
+        navigate("/tecnico");
+      } else {
+        navigate("/"); // Default
+      }
 
     } catch (error: any) {
       alert(error.message || "Error iniciando sesión");

@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useMemo, useState, useEffect } from "react";
 import type { AuthResponse, UserDTO, LoginRequest, RegisterRequest } from "../types/authType";
 import {
   loginRequest,
@@ -7,7 +7,7 @@ import {
   getSessionUser,
   getPerfilRequest,
 } from "../api/auth";
-
+import { initSocket, disconnectSocket } from "../utils/socket";
 type AuthContextType = {
   user: UserDTO | null;
   isAuthenticated: boolean;
@@ -22,15 +22,29 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<UserDTO | null>(getSessionUser());
 
+  // Inicializar Socket.IO si hay usuario logueado
+  useEffect(() => {
+    const currentUser = getSessionUser();
+    if (currentUser) {
+      const token = localStorage.getItem("token");
+      if (token && currentUser.id_usuario) {
+        initSocket(token, currentUser.id_usuario);
+      }
+    }
+  }, []);
+
   const login = async (payload: LoginRequest) => {
     const res = await loginRequest(payload);
     setUser(res.usuario);
-
-    // VALIDACIÓN EXTRA: Solo admin puede entrar a la web
-    if (res.usuario.rol !== "admin") {
-      throw new Error("Solo administradores pueden acceder al panel web");
+    
+    // Inicializar Socket.IO después del login
+    if (res.usuario?.id_usuario) {
+      const token = localStorage.getItem("token");
+      if (token) {
+        initSocket(token, res.usuario.id_usuario);
+      }
     }
-
+    
     return res;
   };
 
@@ -46,6 +60,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const logout = () => {
+    disconnectSocket();
     clearSession();
     setUser(null);
     window.location.reload();

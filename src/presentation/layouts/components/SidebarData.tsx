@@ -64,8 +64,4 @@ export const sections: Section[] = [
     ],
   },
 ];
-
-export const soporteLink: LinkItem = { label: "Soporte Tecnico", to: "/admin/soporte" };
-export const ManualLink: LinkItem = { label: "Manual Tecnico", to: "/admin/manual" };
-export const ManualteoricoLink: LinkItem = { label: "Manual", to: "/admin/manualteorico" };
 export const BRAND = "SmartService.Admin";

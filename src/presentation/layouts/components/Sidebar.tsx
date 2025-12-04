@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { NavLink, Link, useLocation } from "react-router-dom";
+import { NavLink, Link, useLocation ,useNavigate  } from "react-router-dom";
 import {
   FaChevronLeft,
   FaChevronRight,
@@ -9,12 +9,11 @@ import {
 import {
   BRAND,
   sections,
-  soporteLink,
-  ManualLink,
-  ManualteoricoLink,
+
 } from "../components/SidebarData";
-/* import { DarkToggle } from "../../products/ui/DarkToggle";
-import { useAuth } from "../../../context/AuthContext"; */
+
+import { useAuth } from "../../../context/AuthContext";
+
 const cn = (...c: (string | false | null | undefined)[]) =>
   c.filter(Boolean).join(" ");
 
@@ -22,6 +21,8 @@ export const Sidebar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(true);
   const [openKey, setOpenKey] = useState<string | null>("usuario");
   const location = useLocation();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
 
   useEffect(() => {
     const found = sections.find((s) =>
@@ -30,10 +31,9 @@ export const Sidebar: React.FC = () => {
     if (found) setOpenKey(found.key);
   }, [location.pathname]);
 
-  const handleLogout = () => {
-    console.log("Cerrando sesión...");
-    /* logout();
-       navigate("/login"); */
+   const handleLogout = () => {
+    logout();        // limpia token + socket + user
+    navigate("/");   // redirige al login o pantalla principal
   }; // ✅ <- cierre correcto
 
   return (
@@ -138,75 +138,9 @@ export const Sidebar: React.FC = () => {
           );
         })}
 
-        {/* Soporte */}
-        <div className="mt-4">
-          <NavLink
-            to={soporteLink.to}
-            className={({ isActive }) =>
-              cn(
-                "flex items-center gap-2 rounded-xl px-3 py-2",
-                "bg-white/70 dark:bg-slate-800/70",
-                "border border-indigo-100/70 dark:border-slate-700",
-                "hover:bg-white/90 dark:hover:bg-slate-800",
-                "transition",
-                isActive &&
-                  "ring-1 ring-inset ring-fuchsia-300/50 dark:ring-fuchsia-700/40"
-              )
-            }
-          >
-            <FaCog className="text-lg" />
-            <span className={cn(!isOpen && "sr-only")}>
-              {soporteLink.label}
-            </span>
-          </NavLink>
-        </div>
-        {/*manual  */}
-        <div className="mt-4">
-          <NavLink
-            to={ManualLink.to}
-            className={({ isActive }) =>
-              cn(
-                "flex items-center gap-2 rounded-xl px-3 py-2",
-                "bg-white/70 dark:bg-slate-800/70",
-                "border border-indigo-100/70 dark:border-slate-700",
-                "hover:bg-white/90 dark:hover:bg-slate-800",
-                "transition",
-                isActive &&
-                  "ring-1 ring-inset ring-fuchsia-300/50 dark:ring-fuchsia-700/40"
-              )
-            }
-          >
-            <FaCog className="text-lg" />
-            <span className={cn(!isOpen && "sr-only")}>{ManualLink.label}</span>
-          </NavLink>
-        </div>
-        {/* manual teorico  */}
-        <div className="mt-4">
-          <NavLink
-            to={ManualteoricoLink.to}
-            className={({ isActive }) =>
-              cn(
-                "flex items-center gap-2 rounded-xl px-3 py-2",
-                "bg-white/70 dark:bg-slate-800/70",
-                "border border-indigo-100/70 dark:border-slate-700",
-                "hover:bg-white/90 dark:hover:bg-slate-800",
-                "transition",
-                isActive &&
-                  "ring-1 ring-inset ring-fuchsia-300/50 dark:ring-fuchsia-700/40"
-              )
-            }
-          >
-            <FaCog className="text-lg" />
-            <span className={cn(!isOpen && "sr-only")}>
-              {ManualteoricoLink.label}
-            </span>
-          </NavLink>
-        </div>
-        {/* Dark mode con componente global */}
-        <div className="mt-6 flex items-center gap-3 rounded-xl px-3 py-2 bg-white/60 dark:bg-slate-800/60 border border-indigo-100/70 dark:border-slate-700">
-          <span className={cn("text-sm", !isOpen && "sr-only")}>Dark mode</span>
-        {/*   <DarkToggle /> */} 
-        </div>
+  
+   
+
 
         {/* boton de cerrar seccion  */}
         <button
@@ -222,19 +156,7 @@ export const Sidebar: React.FC = () => {
         >
           {isOpen ? "Cerrar sesión" : "⎋"}
         </button>
-        {/* ir a shopealo */}
-        <Link
-          to="/" // The link to the public part of the app
-          className={cn(
-            "mt-3 w-full rounded-xl px-3 py-2 text-left",
-            "bg-white/70 dark:bg-slate-800/70",
-            "border border-indigo-100/70 dark:border-slate-700",
-            "hover:bg-white/90 dark:hover:bg-slate-800",
-            "transition text-sm font-medium text-red-600 dark:text-red-400"
-          )}
-        >
-          Ir a Shopealo
-        </Link>
+     
       </div>
     </aside>
   );

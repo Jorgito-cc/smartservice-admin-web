@@ -1,8 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { registerTecnicoRequest } from "../../../api/auth";
 import { uploadImageCloudinary } from "../../../utils/uploadCloudinary";
+import { getCategoriasRequest } from "../../../api/categoria";
+import type { CategoriaType } from "../../../types/categoriaType";
 
 export const RegisterTecnico = () => {
+
+  const [categorias, setCategorias] = useState<CategoriaType[]>([]);
+
   const [form, setForm] = useState({
     nombre: "",
     apellido: "",
@@ -10,25 +15,70 @@ export const RegisterTecnico = () => {
     password: "",
     telefono: "",
     descripcion: "",
+    ci: "",
+    calificacion_promedio: 0,
     foto: null as File | null,
+    foto_ci: null as File | null,
     rol: "tecnico",
+    especialidades: [
+      { nombre: "", referencias: "", anio_experiencia: 0 }
+    ],
   });
 
+  // =========================
+  // CARGAR CATEGORÍAS
+  // =========================
+  useEffect(() => {
+    const cargarCategorias = async () => {
+      try {
+        const res = await getCategoriasRequest();
+        setCategorias(res);
+      } catch (e) {
+        console.error("Error cargando categorías", e);
+      }
+    };
+    cargarCategorias();
+  }, []);
+
+  // =========================
+  // HANDLERS
+  // =========================
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleEspecialidadChange = (index: number, e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
+    const nuevas = [...form.especialidades];
+    nuevas[index][e.target.name] = e.target.value;
+    setForm({ ...form, especialidades: nuevas });
+  };
+
+  const agregarEspecialidad = () => {
     setForm({
       ...form,
-      [e.target.name]: e.target.value,
+      especialidades: [
+        ...form.especialidades,
+        { nombre: "", referencias: "", anio_experiencia: 0 }
+      ]
     });
   };
 
+  // =========================
+  // SUBMIT
+  // =========================
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
       let fotoUrl = "";
+      let fotoCiUrl = "";
 
       if (form.foto instanceof File) {
         fotoUrl = await uploadImageCloudinary(form.foto);
+      }
+
+      if (form.foto_ci instanceof File) {
+        fotoCiUrl = await uploadImageCloudinary(form.foto_ci);
       }
 
       const payload = {
@@ -38,24 +88,20 @@ export const RegisterTecnico = () => {
         password: form.password,
         telefono: form.telefono,
         descripcion: form.descripcion,
-        rol: form.rol,
+        ci: form.ci,
         foto: fotoUrl,
+        foto_ci: fotoCiUrl,
+        rol: "tecnico",
+        calificacion_promedio: Number(form.calificacion_promedio),
+        especialidades: form.especialidades.map((e) => ({
+          nombre: e.nombre,
+          referencias: e.referencias,
+          anio_experiencia: Number(e.anio_experiencia)
+        }))
       };
 
       const res = await registerTecnicoRequest(payload);
-
       alert("Técnico registrado correctamente\n" + res.msg);
-
-      setForm({
-        nombre: "",
-        apellido: "",
-        email: "",
-        password: "",
-        telefono: "",
-        descripcion: "",
-        foto: null,
-        rol: "tecnico",
-      });
 
     } catch (err) {
       console.error(err);
@@ -63,29 +109,86 @@ export const RegisterTecnico = () => {
     }
   };
 
+  // =========================
+  // UI
+  // =========================
   return (
     <div className="p-8 max-w-xl mx-auto bg-white rounded shadow">
       <h1 className="text-2xl font-bold mb-6">Registrar Técnico</h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">
 
-        <input type="text" name="nombre" value={form.nombre} onChange={handleChange} placeholder="Nombre" className="w-full p-2 border rounded" required />
+        <input type="text" name="nombre" placeholder="Nombre"
+          onChange={handleChange} className="w-full p-2 border rounded" required />
 
-        <input type="text" name="apellido" value={form.apellido} onChange={handleChange} placeholder="Apellido" className="w-full p-2 border rounded" required />
+        <input type="text" name="apellido" placeholder="Apellido"
+          onChange={handleChange} className="w-full p-2 border rounded" required />
 
-        <input type="email" name="email" value={form.email} onChange={handleChange} placeholder="Correo" className="w-full p-2 border rounded" required />
+        <input type="email" name="email" placeholder="Correo"
+          onChange={handleChange} className="w-full p-2 border rounded" required />
 
-        <input type="password" name="password" value={form.password} onChange={handleChange} placeholder="Contraseña" className="w-full p-2 border rounded" required />
+        <input type="password" name="password" placeholder="Contraseña"
+          onChange={handleChange} className="w-full p-2 border rounded" required />
 
-        <input type="text" name="telefono" value={form.telefono} onChange={handleChange} placeholder="Teléfono" className="w-full p-2 border rounded" />
+        <input type="text" name="telefono" placeholder="Teléfono"
+          onChange={handleChange} className="w-full p-2 border rounded" />
 
-        <textarea name="descripcion" value={form.descripcion} onChange={handleChange} placeholder="Descripción" className="w-full p-2 border rounded" />
+        <input type="text" name="ci" placeholder="CI"
+          onChange={handleChange} className="w-full p-2 border rounded" />
 
-        <input type="file" name="foto" onChange={(e) => setForm({ ...form, foto: e.target.files?.[0] ?? null })} className="w-full p-2 border rounded" />
+        <input type="number" name="calificacion_promedio" placeholder="Calificación Inicial (0-5)"
+          onChange={handleChange} className="w-full p-2 border rounded" />
 
-        <button type="submit" className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700">
+        <textarea name="descripcion" placeholder="Descripción"
+          onChange={handleChange} className="w-full p-2 border rounded" />
+
+        <label>Foto del Técnico:</label>
+        <input type="file"
+          onChange={(e) => setForm({ ...form, foto: e.target.files?.[0] || null })} />
+
+        <label>Foto del CI:</label>
+        <input type="file"
+          onChange={(e) => setForm({ ...form, foto_ci: e.target.files?.[0] || null })} />
+
+        <h3 className="font-bold">Especialidades</h3>
+
+        {form.especialidades.map((esp, index) => (
+          <div key={index} className="border p-3 rounded mb-2">
+
+            <select
+              name="nombre"
+              className="w-full p-2 border rounded mb-2"
+              value={esp.nombre}
+              onChange={(e) => handleEspecialidadChange(index, e)}
+            >
+              <option value="">Seleccione una categoría</option>
+              {categorias.map((cat) => (
+                <option key={cat.id_categoria} value={cat.nombre}>
+                  {cat.nombre}
+                </option>
+              ))}
+            </select>
+
+            <input type="text" name="referencias" placeholder="Referencias"
+              onChange={(e) => handleEspecialidadChange(index, e)}
+              className="w-full p-2 border rounded mb-2" />
+
+            <input type="number" name="anio_experiencia" placeholder="Años experiencia"
+              onChange={(e) => handleEspecialidadChange(index, e)}
+              className="w-full p-2 border rounded" />
+          </div>
+        ))}
+
+        <button type="button" onClick={agregarEspecialidad}
+          className="bg-gray-500 text-white p-2 rounded mb-4">
+          + Agregar especialidad
+        </button>
+
+        <button type="submit"
+          className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700">
           Registrar Técnico
         </button>
+
       </form>
     </div>
   );
