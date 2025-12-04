@@ -20,6 +20,10 @@ export interface Oferta {
     apellido: string;
     foto?: string;
   };
+  Tecnico?: {
+    calificacion_promedio: number;
+    descripcion?: string;
+  };
 }
 
 // Crear oferta (técnico)

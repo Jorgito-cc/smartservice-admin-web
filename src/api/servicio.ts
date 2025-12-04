@@ -35,3 +35,9 @@ export const listarServiciosPorTecnico = async (): Promise<Servicio[]> => {
   return data.data;
 };
 
+// Listar servicios del cliente
+export const listarServiciosPorCliente = async (): Promise<Servicio[]> => {
+  const { data } = await api.get<{ msg: string; data: Servicio[] }>("/servicios/cliente/mis-servicios");
+  return data.data;
+};
+

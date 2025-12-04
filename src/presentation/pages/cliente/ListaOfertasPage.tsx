@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { listarOfertasPorSolicitud, Oferta } from "../../../api/oferta";
+import { listarOfertasPorSolicitud, type Oferta } from "../../../api/oferta";
 import { aceptarOferta } from "../../../api/servicio";
 import { FaCheck, FaUser, FaDollarSign, FaStar } from "react-icons/fa";
 
@@ -72,20 +72,35 @@ export const ListaOfertasPage = () => {
                 className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition border-2 border-transparent hover:border-indigo-500"
               >
                 <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mr-3">
-                    <FaUser className="text-indigo-600 text-xl" />
-                  </div>
+                  {oferta.Usuario?.foto ? (
+                    <img
+                      src={oferta.Usuario.foto}
+                      alt={`${oferta.Usuario.nombre} ${oferta.Usuario.apellido}`}
+                      className="w-12 h-12 rounded-full object-cover mr-3 border-2 border-indigo-200"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mr-3">
+                      <FaUser className="text-indigo-600 text-xl" />
+                    </div>
+                  )}
                   <div>
                     <h3 className="font-semibold text-gray-800">
                       {oferta.Usuario?.nombre} {oferta.Usuario?.apellido}
                     </h3>
                     <div className="flex items-center text-yellow-500 text-sm">
-                      <FaStar />
-                      <FaStar />
-                      <FaStar />
-                      <FaStar />
-                      <FaStar />
-                      <span className="ml-2 text-gray-600">4.5</span>
+                      {[...Array(5)].map((_, i) => (
+                        <FaStar
+                          key={i}
+                          className={
+                            i < Math.floor(oferta.Tecnico?.calificacion_promedio || 0)
+                              ? "text-yellow-500"
+                              : "text-gray-300"
+                          }
+                        />
+                      ))}
+                      <span className="ml-2 text-gray-600">
+                        {oferta.Tecnico?.calificacion_promedio?.toFixed(1) || "Sin calificar"}
+                      </span>
                     </div>
                   </div>
                 </div>

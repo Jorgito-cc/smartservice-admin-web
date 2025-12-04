@@ -20,6 +20,7 @@ import { RegisterPage } from "../pages/auth/RegisterPage";
 import { DashboardClientePage } from "../pages/cliente/DashboardClientePage";
 import { CrearSolicitudPage } from "../pages/cliente/CrearSolicitudPage";
 import { MisSolicitudesPage } from "../pages/cliente/MisSolicitudesPage";
+import { MisServiciosClientePage } from "../pages/cliente/MisServiciosClientePage";
 import { ChatGrupalPage } from "../pages/cliente/ChatGrupalPage";
 import { ListaOfertasPage } from "../pages/cliente/ListaOfertasPage";
 import { ChatPrivadoPage } from "../pages/cliente/ChatPrivadoPage";
@@ -54,7 +55,7 @@ export const AppRouter = () => {
           <Route path="technicians" element={<TechnicianListPage />} />
           <Route path="bitacora" element={<Bitacora />} />
           <Route path="listausuario" element={<ListarUsuarios />} />
-          <Route path="registertecnico" element={<RegisterTecnico/>} />
+          <Route path="registertecnico" element={<RegisterTecnico />} />
           <Route path="technicians/:id" element={<TechnicianProfilePage />} />
           <Route path="request" element={<RequestListPage />} />
           <Route path="payments" element={<PaymentsListPage />} />
@@ -75,6 +76,7 @@ export const AppRouter = () => {
           <Route index element={<DashboardClientePage />} />
           <Route path="solicitar" element={<CrearSolicitudPage />} />
           <Route path="solicitudes" element={<MisSolicitudesPage />} />
+          <Route path="servicios" element={<MisServiciosClientePage />} />
           <Route path="solicitud/:id/chat" element={<ChatGrupalPage />} />
           <Route path="solicitud/:id/ofertas" element={<ListaOfertasPage />} />
           <Route path="servicio/:id/chat" element={<ChatPrivadoPage />} />

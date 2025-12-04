@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { obtenerPagoPorServicio, crearCheckout, PagoServicio } from "../../../api/pago";
+import { obtenerPagoPorServicio, crearCheckout, type PagoServicio } from "../../../api/pago";
 import { obtenerServicio } from "../../../api/servicio";
-import { FaCreditCard, FaCheckCircle, FaTimes, FaSpinner } from "react-icons/fa";
+import { FaCreditCard, FaCheckCircle, FaTimes, FaSpinner, FaQrcode, FaMoneyBillWave, FaMobileAlt } from "react-icons/fa";
 
 export const PagoPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -11,6 +11,7 @@ export const PagoPage = () => {
   const [pago, setPago] = useState<PagoServicio | { estado: "sin_registro" } | null>(null);
   const [loading, setLoading] = useState(true);
   const [procesando, setProcesando] = useState(false);
+  const [metodoPago, setMetodoPago] = useState<"tarjeta" | "qr" | "efectivo" | "movil">("tarjeta");
 
   useEffect(() => {
     if (id) {
@@ -36,12 +37,19 @@ export const PagoPage = () => {
 
   const handlePagar = async () => {
     if (!id) return;
-    
+
     try {
       setProcesando(true);
-      const { url } = await crearCheckout(Number(id));
-      // Redirigir a Stripe Checkout
-      window.location.href = url;
+      const resultado = await crearCheckout(Number(id), metodoPago);
+
+      // Si es pago con tarjeta, redirigir a Stripe
+      if (metodoPago === "tarjeta" && resultado.url) {
+        window.location.href = resultado.url;
+      } else {
+        // Para otros métodos, mostrar confirmación
+        alert(resultado.msg || "Pago registrado. Pendiente de confirmación del administrador.");
+        navigate("/cliente");
+      }
     } catch (error: any) {
       console.error("Error iniciando pago:", error);
       alert(error.response?.data?.msg || "Error al iniciar el pago");
@@ -67,7 +75,7 @@ export const PagoPage = () => {
   }
 
   const pagoCompletado = pago && "estado" in pago && pago.estado === "pagado";
-  const sinRegistro = pago && "estado" in pago && pago.estado === "sin_registro";
+  const servicioCompletado = servicio?.estado === "completado";
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
@@ -83,6 +91,7 @@ export const PagoPage = () => {
               <div className="bg-green-50 rounded-lg p-4 mb-6">
                 <p className="text-sm text-gray-600">Monto pagado:</p>
                 <p className="text-2xl font-bold text-green-600">Bs. {pago.monto_total}</p>
+                <p className="text-sm text-gray-600 mt-2">Método: {pago.metodo_pago || "tarjeta"}</p>
               </div>
             )}
             <button
@@ -122,27 +131,111 @@ export const PagoPage = () => {
               </div>
             )}
 
-            {pago && "estado" in pago && pago.estado === "pendiente" && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-                <p className="text-yellow-800">Tienes un pago pendiente. Completa el proceso en Stripe.</p>
+            {!servicioCompletado && (
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
+                <p className="text-orange-800 font-medium">⏳ El pago estará disponible cuando el técnico marque el servicio como completado.</p>
+                <p className="text-orange-700 text-sm mt-2">Estado actual: <span className="font-semibold capitalize">{servicio.estado.replace("_", " ")}</span></p>
               </div>
             )}
+
+            {pago && "estado" in pago && pago.estado === "pendiente" && servicioCompletado && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                <p className="text-yellow-800">Tienes un pago pendiente. Completa el proceso o selecciona otro método.</p>
+              </div>
+            )}
+
+            {/* Selector de Método de Pago */}
+            <div className="mb-6">
+              <h2 className="text-lg font-semibold text-gray-700 mb-4">Método de Pago</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <label className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition ${metodoPago === "tarjeta" ? "border-blue-600 bg-blue-50" : "border-gray-300 hover:border-blue-400"}`}>
+                  <input
+                    type="radio"
+                    name="metodo_pago"
+                    value="tarjeta"
+                    checked={metodoPago === "tarjeta"}
+                    onChange={(e) => setMetodoPago(e.target.value as any)}
+                    className="mr-3"
+                  />
+                  <FaCreditCard className="text-2xl text-blue-600 mr-3" />
+                  <div>
+                    <p className="font-semibold">Tarjeta</p>
+                    <p className="text-xs text-gray-600">Pago con Stripe</p>
+                  </div>
+                </label>
+
+                <label className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition ${metodoPago === "qr" ? "border-blue-600 bg-blue-50" : "border-gray-300 hover:border-blue-400"}`}>
+                  <input
+                    type="radio"
+                    name="metodo_pago"
+                    value="qr"
+                    checked={metodoPago === "qr"}
+                    onChange={(e) => setMetodoPago(e.target.value as any)}
+                    className="mr-3"
+                  />
+                  <FaQrcode className="text-2xl text-purple-600 mr-3" />
+                  <div>
+                    <p className="font-semibold">QR</p>
+                    <p className="text-xs text-gray-600">Código QR</p>
+                  </div>
+                </label>
+
+                <label className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition ${metodoPago === "efectivo" ? "border-blue-600 bg-blue-50" : "border-gray-300 hover:border-blue-400"}`}>
+                  <input
+                    type="radio"
+                    name="metodo_pago"
+                    value="efectivo"
+                    checked={metodoPago === "efectivo"}
+                    onChange={(e) => setMetodoPago(e.target.value as any)}
+                    className="mr-3"
+                  />
+                  <FaMoneyBillWave className="text-2xl text-green-600 mr-3" />
+                  <div>
+                    <p className="font-semibold">Efectivo</p>
+                    <p className="text-xs text-gray-600">Pago en efectivo</p>
+                  </div>
+                </label>
+
+                <label className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition ${metodoPago === "movil" ? "border-blue-600 bg-blue-50" : "border-gray-300 hover:border-blue-400"}`}>
+                  <input
+                    type="radio"
+                    name="metodo_pago"
+                    value="movil"
+                    checked={metodoPago === "movil"}
+                    onChange={(e) => setMetodoPago(e.target.value as any)}
+                    className="mr-3"
+                  />
+                  <FaMobileAlt className="text-2xl text-orange-600 mr-3" />
+                  <div>
+                    <p className="font-semibold">Móvil</p>
+                    <p className="text-xs text-gray-600">Pago móvil</p>
+                  </div>
+                </label>
+              </div>
+            </div>
 
             <div className="flex flex-col gap-4">
               <button
                 onClick={handlePagar}
-                disabled={procesando || pagoCompletado}
+                disabled={procesando || pagoCompletado || !servicioCompletado}
                 className="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {procesando ? (
+                {!servicioCompletado ? (
+                  <>
+                    ⏳ Esperando que el técnico complete el trabajo
+                  </>
+                ) : procesando ? (
                   <>
                     <FaSpinner className="animate-spin" />
                     Procesando...
                   </>
                 ) : (
                   <>
-                    <FaCreditCard />
-                    Pagar con Stripe
+                    {metodoPago === "tarjeta" ? <FaCreditCard /> :
+                      metodoPago === "qr" ? <FaQrcode /> :
+                        metodoPago === "efectivo" ? <FaMoneyBillWave /> :
+                          <FaMobileAlt />}
+                    {metodoPago === "tarjeta" ? "Pagar con Stripe" : `Confirmar Pago con ${metodoPago.charAt(0).toUpperCase() + metodoPago.slice(1)}`}
                   </>
                 )}
               </button>
@@ -155,15 +248,18 @@ export const PagoPage = () => {
               </button>
             </div>
 
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600">
-                <strong>Nota:</strong> Serás redirigido a Stripe para completar el pago de forma segura.
-              </p>
-            </div>
+            {servicioCompletado && (
+              <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-600">
+                  <strong>Nota:</strong> {metodoPago === "tarjeta"
+                    ? "Serás redirigido a Stripe para completar el pago de forma segura."
+                    : "Tu pago quedará pendiente hasta que el administrador lo confirme."}
+                </p>
+              </div>
+            )}
           </>
         )}
       </div>
     </div>
   );
 };
-

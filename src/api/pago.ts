@@ -7,14 +7,19 @@ export interface PagoServicio {
   comision_empresa: number;
   monto_tecnico: number;
   estado: "pendiente" | "pagado" | "cancelado";
+  metodo_pago?: "tarjeta" | "qr" | "efectivo" | "movil";
   stripe_payment_id: string | null;
   fecha_pago: string | null;
 }
 
-// Crear checkout de Stripe
-export const crearCheckout = async (idServicio: number): Promise<{ url: string }> => {
-  const { data } = await api.post<{ url: string }>("/pago/checkout", {
+// Crear checkout de Stripe o registrar pago con otro método
+export const crearCheckout = async (
+  idServicio: number,
+  metodoPago: "tarjeta" | "qr" | "efectivo" | "movil" = "tarjeta"
+): Promise<{ url?: string; msg?: string; pago?: any; requiere_confirmacion?: boolean }> => {
+  const { data } = await api.post("/pago/checkout", {
     id_servicio: idServicio,
+    metodo_pago: metodoPago,
   });
   return data;
 };

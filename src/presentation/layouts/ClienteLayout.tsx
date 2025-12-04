@@ -61,6 +61,13 @@ export const ClienteLayout: React.FC = () => {
               Mis Solicitudes
             </Link>
             <Link
+              to="/cliente/servicios"
+              className="flex items-center px-3 py-4 text-sm font-medium text-gray-700 border-b-2 border-transparent hover:border-indigo-500 hover:text-indigo-600"
+            >
+              <FaComments className="mr-2" />
+              Mis Servicios
+            </Link>
+            <Link
               to="/cliente/perfil"
               className="flex items-center px-3 py-4 text-sm font-medium text-gray-700 border-b-2 border-transparent hover:border-indigo-500 hover:text-indigo-600"
             >
