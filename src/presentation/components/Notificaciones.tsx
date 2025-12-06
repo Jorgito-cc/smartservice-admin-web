@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { getSocket } from "../../utils/socket";
-import { listarNotificaciones, marcarLeida, eliminarNotificacion, Notificacion } from "../../api/notificacion";
+import { listarNotificaciones, marcarLeida, eliminarNotificacion, type Notificacion } from "../../api/notificacion";
 import { FaBell, FaTimes, FaCheck } from "react-icons/fa";
 
 export const Notificaciones = () => {
@@ -102,9 +102,8 @@ export const Notificaciones = () => {
               {notificaciones.map((notificacion) => (
                 <div
                   key={notificacion.id_notificacion}
-                  className={`p-4 hover:bg-gray-50 transition-colors ${
-                    !notificacion.leido ? "bg-blue-50" : ""
-                  }`}
+                  className={`p-4 hover:bg-gray-50 transition-colors ${!notificacion.leido ? "bg-blue-50" : ""
+                    }`}
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex-1">

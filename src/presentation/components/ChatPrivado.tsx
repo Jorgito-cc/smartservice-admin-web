@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getSocket } from "../../utils/socket";
-import { obtenerHistorialServicio, Mensaje } from "../../api/chat";
-import { obtenerServicio, cambiarEstadoServicio, Servicio } from "../../api/servicio";
+import { obtenerHistorialServicio, type Mensaje } from "../../api/chat";
+import { obtenerServicio, cambiarEstadoServicio, type Servicio } from "../../api/servicio";
 import { obtenerPagoPorServicio } from "../../api/pago";
 import { useAuth } from "../../context/AuthContext";
 import { FaPaperPlane, FaCheckCircle, FaClock, FaTools, FaCreditCard, FaStar } from "react-icons/fa";
@@ -116,7 +116,7 @@ export const ChatPrivado = ({ esCliente = false }: ChatPrivadoProps) => {
   };
 
   const getEstadoBadge = (estado: string) => {
-    const badges: Record<string, { color: string; icon: JSX.Element; text: string }> = {
+    const badges: Record<string, { color: string; icon: React.ReactNode; text: string }> = {
       en_camino: {
         color: "bg-blue-100 text-blue-800",
         icon: <FaClock className="mr-1" />,
@@ -221,9 +221,8 @@ export const ChatPrivado = ({ esCliente = false }: ChatPrivadoProps) => {
           return (
             <div key={mensaje.id_mensaje} className={`flex ${esMio ? "justify-end" : "justify-start"}`}>
               <div
-                className={`max-w-md rounded-lg p-3 ${
-                  esMio ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-800"
-                }`}
+                className={`max-w-md rounded-lg p-3 ${esMio ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-800"
+                  }`}
               >
                 {!esMio && (
                   <div className="text-xs font-semibold mb-1">

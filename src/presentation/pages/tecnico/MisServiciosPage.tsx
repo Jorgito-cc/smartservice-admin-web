@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { listarServiciosPorTecnico, Servicio } from "../../../api/servicio";
+import { listarServiciosPorTecnico, type Servicio } from "../../../api/servicio";
 import { FaTools, FaCheckCircle, FaClock, FaComments } from "react-icons/fa";
 
 export const MisServiciosPage = () => {
@@ -25,8 +25,8 @@ export const MisServiciosPage = () => {
     }
   };
 
-  const serviciosFiltrados = filtroEstado === "todos" 
-    ? servicios 
+  const serviciosFiltrados = filtroEstado === "todos"
+    ? servicios
     : servicios.filter(s => s.estado === filtroEstado);
 
   const getEstadoColor = (estado: string) => {
@@ -80,46 +80,42 @@ export const MisServiciosPage = () => {
     <div className="p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-800 mb-4">Mis Servicios</h1>
-        
+
         {/* Filtros */}
         <div className="flex gap-2 mb-4">
           <button
             onClick={() => setFiltroEstado("todos")}
-            className={`px-4 py-2 rounded-lg ${
-              filtroEstado === "todos"
+            className={`px-4 py-2 rounded-lg ${filtroEstado === "todos"
                 ? "bg-blue-600 text-white"
                 : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-            }`}
+              }`}
           >
             Todos
           </button>
           <button
             onClick={() => setFiltroEstado("en_camino")}
-            className={`px-4 py-2 rounded-lg ${
-              filtroEstado === "en_camino"
+            className={`px-4 py-2 rounded-lg ${filtroEstado === "en_camino"
                 ? "bg-blue-600 text-white"
                 : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-            }`}
+              }`}
           >
             En Camino
           </button>
           <button
             onClick={() => setFiltroEstado("en_ejecucion")}
-            className={`px-4 py-2 rounded-lg ${
-              filtroEstado === "en_ejecucion"
+            className={`px-4 py-2 rounded-lg ${filtroEstado === "en_ejecucion"
                 ? "bg-blue-600 text-white"
                 : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-            }`}
+              }`}
           >
             En Ejecución
           </button>
           <button
             onClick={() => setFiltroEstado("completado")}
-            className={`px-4 py-2 rounded-lg ${
-              filtroEstado === "completado"
+            className={`px-4 py-2 rounded-lg ${filtroEstado === "completado"
                 ? "bg-blue-600 text-white"
                 : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-            }`}
+              }`}
           >
             Completados
           </button>

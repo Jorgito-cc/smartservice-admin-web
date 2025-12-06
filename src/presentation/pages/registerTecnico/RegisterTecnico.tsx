@@ -49,7 +49,8 @@ export const RegisterTecnico = () => {
 
   const handleEspecialidadChange = (index: number, e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
     const nuevas = [...form.especialidades];
-    nuevas[index][e.target.name] = e.target.value;
+    const fieldName = e.target.name as keyof typeof nuevas[number];
+    (nuevas[index] as any)[fieldName] = e.target.value;
     setForm({ ...form, especialidades: nuevas });
   };
 
@@ -91,7 +92,7 @@ export const RegisterTecnico = () => {
         ci: form.ci,
         foto: fotoUrl,
         foto_ci: fotoCiUrl,
-        rol: "tecnico",
+        rol: "tecnico" as const,
         calificacion_promedio: Number(form.calificacion_promedio),
         especialidades: form.especialidades.map((e) => ({
           nombre: e.nombre,

@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { listarSolicitudesCliente, Solicitud } from "../../../api/solicitud";
+import { listarSolicitudesCliente, type Solicitud } from "../../../api/solicitud";
 import { FaEye, FaComments, FaCheckCircle, FaClock } from "react-icons/fa";
 
 export const MisSolicitudesPage = () => {
@@ -24,7 +24,7 @@ export const MisSolicitudesPage = () => {
   };
 
   const getEstadoBadge = (estado: string) => {
-    const badges: Record<string, { color: string; icon: JSX.Element; text: string }> = {
+    const badges: Record<string, { color: string; icon: React.ReactNode; text: string }> = {
       pendiente: {
         color: "bg-yellow-100 text-yellow-800",
         icon: <FaClock className="mr-1" />,

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { listarSolicitudesCliente, Solicitud } from "../../../api/solicitud";
+import { listarSolicitudesCliente, type Solicitud } from "../../../api/solicitud";
 import { FaPlusCircle, FaComments, FaCheckCircle, FaClock } from "react-icons/fa";
 
 export const DashboardClientePage = () => {
@@ -113,9 +113,9 @@ export const DashboardClientePage = () => {
                   <p className="text-sm text-gray-600 truncate max-w-md">{solicitud.descripcion}</p>
                 </div>
                 <span className={`px-3 py-1 rounded-full text-xs font-medium ${solicitud.estado === "completado" ? "bg-green-100 text-green-800" :
-                    solicitud.estado === "asignado" || solicitud.estado === "en_proceso" ? "bg-blue-100 text-blue-800" :
-                      solicitud.estado === "con_ofertas" ? "bg-yellow-100 text-yellow-800" :
-                        "bg-gray-100 text-gray-800"
+                  solicitud.estado === "asignado" || solicitud.estado === "en_proceso" ? "bg-blue-100 text-blue-800" :
+                    solicitud.estado === "con_ofertas" ? "bg-yellow-100 text-yellow-800" :
+                      "bg-gray-100 text-gray-800"
                   }`}>
                   {solicitud.estado}
                 </span>

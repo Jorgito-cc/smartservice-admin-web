@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { listarServiciosPorCliente, Servicio } from "../../../api/servicio";
+import { listarServiciosPorCliente, type Servicio } from "../../../api/servicio";
 import { FaTools, FaCheckCircle, FaClock, FaComments, FaCreditCard, FaStar } from "react-icons/fa";
 
 export const MisServiciosClientePage = () => {
@@ -86,8 +86,8 @@ export const MisServiciosClientePage = () => {
                     <button
                         onClick={() => setFiltroEstado("todos")}
                         className={`px-4 py-2 rounded-lg whitespace-nowrap ${filtroEstado === "todos"
-                                ? "bg-blue-600 text-white"
-                                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                             }`}
                     >
                         Todos
@@ -95,8 +95,8 @@ export const MisServiciosClientePage = () => {
                     <button
                         onClick={() => setFiltroEstado("en_camino")}
                         className={`px-4 py-2 rounded-lg whitespace-nowrap ${filtroEstado === "en_camino"
-                                ? "bg-blue-600 text-white"
-                                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                             }`}
                     >
                         En Camino
@@ -104,8 +104,8 @@ export const MisServiciosClientePage = () => {
                     <button
                         onClick={() => setFiltroEstado("en_ejecucion")}
                         className={`px-4 py-2 rounded-lg whitespace-nowrap ${filtroEstado === "en_ejecucion"
-                                ? "bg-blue-600 text-white"
-                                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                             }`}
                     >
                         En Ejecución
@@ -113,8 +113,8 @@ export const MisServiciosClientePage = () => {
                     <button
                         onClick={() => setFiltroEstado("completado")}
                         className={`px-4 py-2 rounded-lg whitespace-nowrap ${filtroEstado === "completado"
-                                ? "bg-blue-600 text-white"
-                                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                             }`}
                     >
                         Completados
