@@ -1,62 +1,60 @@
 // src/components/AuthModal.tsx
+import { useState } from "react";
 import { useAuthVM } from "../viewmodels/useAuthVM";
+import { LoginPage } from "../pages/auth/LoginPage";
+import { RegisterPage } from "../pages/auth/RegisterPage";
 
 export default function AuthModal({ vm }: { vm: ReturnType<typeof useAuthVM> }) {
+  const [activeTab, setActiveTab] = useState<"login" | "register">("login");
+
   if (!vm.isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div className="bg-white rounded-lg shadow-lg w-80 p-6 relative animate-fade-in">
-        
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto relative animate-fade-in">
+
         {/* BOTÓN PARA CERRAR */}
         <button
           onClick={vm.closeModal}
-          className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-lg font-bold"
+          className="absolute top-4 right-4 z-10 text-gray-500 hover:text-gray-800 text-3xl font-bold bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-md hover:shadow-lg transition"
         >
           ×
         </button>
 
-        <h2 className="text-xl font-semibold text-gray-800 mb-4 text-center">
-          Iniciar Sesión Administrativa
-        </h2>
-
-        {/* FORMULARIO */}
-        <form onSubmit={vm.handleSubmit(vm.onSubmit)} className="space-y-4">
-
-          {/* CORREO */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Correo</label>
-            <input
-              {...vm.register("email")}
-              type="email"
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-            {vm.formState.errors.email && (
-              <p className="text-red-600 text-sm">{vm.formState.errors.email.message}</p>
-            )}
-          </div>
-
-          {/* CONTRASEÑA */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Contraseña</label>
-            <input
-              {...vm.register("password")}
-              type="password"
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-            {vm.formState.errors.password && (
-              <p className="text-red-600 text-sm">{vm.formState.errors.password.message}</p>
-            )}
-          </div>
-
-          {/* BOTÓN login */}
+        {/* TABS */}
+        <div className="flex border-b border-gray-200 bg-gray-50 rounded-t-2xl">
           <button
-            type="submit"
-            className="w-full bg-blue-600 text-white rounded-md py-2 mt-4 hover:bg-blue-700 transition"
+            onClick={() => setActiveTab("login")}
+            className={`flex-1 py-4 text-center font-semibold transition ${activeTab === "login"
+                ? "text-indigo-600 border-b-2 border-indigo-600 bg-white"
+                : "text-gray-500 hover:text-gray-700"
+              }`}
           >
-            Ingresar
+            Iniciar Sesión
           </button>
-        </form>
+          <button
+            onClick={() => setActiveTab("register")}
+            className={`flex-1 py-4 text-center font-semibold transition ${activeTab === "register"
+                ? "text-indigo-600 border-b-2 border-indigo-600 bg-white"
+                : "text-gray-500 hover:text-gray-700"
+              }`}
+          >
+            Registrarse
+          </button>
+        </div>
+
+        {/* CONTENIDO DEL MODAL */}
+        <div className="p-6">
+          {activeTab === "login" ? (
+            <div className="max-w-md mx-auto">
+              <LoginPage />
+            </div>
+          ) : (
+            <div className="max-w-2xl mx-auto">
+              <RegisterPage />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

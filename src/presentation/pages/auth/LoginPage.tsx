@@ -45,9 +45,9 @@ export const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
-        <h2 className="text-3xl font-bold text-center text-gray-800 mb-8">
+    <div className="w-full">
+      <div className="w-full bg-white rounded-xl p-6">
+        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
           Iniciar Sesión
         </h2>
 
@@ -57,7 +57,7 @@ export const LoginPage = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Email
@@ -94,15 +94,6 @@ export const LoginPage = () => {
             {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
           </button>
         </form>
-
-        <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">
-            ¿No tienes cuenta?{" "}
-            <a href="/register" className="text-indigo-600 hover:underline">
-              Regístrate
-            </a>
-          </p>
-        </div>
       </div>
     </div>
   );

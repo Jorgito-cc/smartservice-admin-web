@@ -36,9 +36,9 @@ export const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50 py-12">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
-        <h2 className="text-3xl font-bold text-center text-gray-800 mb-8">
+    <div className="w-full">
+      <div className="w-full bg-white rounded-xl p-6">
+        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
           Crear Cuenta
         </h2>
 
@@ -143,15 +143,6 @@ export const RegisterPage = () => {
             {loading ? "Registrando..." : "Registrarse"}
           </button>
         </form>
-
-        <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">
-            ¿Ya tienes cuenta?{" "}
-            <a href="/" className="text-indigo-600 hover:underline">
-              Inicia sesión
-            </a>
-          </p>
-        </div>
       </div>
     </div>
   );
