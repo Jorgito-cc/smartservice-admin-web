@@ -2,7 +2,7 @@
 import axios from "axios";
 
 export const api = axios.create({
-  baseURL: "http://localhost:4000/api", // tu backend
+  baseURL: "https://smartservicebackend-production.up.railway.app/api", // tu backend
   withCredentials: false,
 });
 
