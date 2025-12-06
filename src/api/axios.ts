@@ -70,7 +70,7 @@ api.interceptors.response.use(
 
       try {
         // Hacemos la petición de refresh usando una instancia nueva de axios para evitar bucles
-        const response = await axios.post("http://localhost:4000/api/auth/refresh-token", {
+        const response = await axios.post("https://smartservicebackend-production.up.railway.app/api/auth/refresh-token", {
           refreshToken,
         });
 
