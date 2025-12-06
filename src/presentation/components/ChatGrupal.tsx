@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getSocket } from "../../utils/socket";
-import { obtenerHistorialGrupal, Mensaje } from "../../api/chat";
+import { obtenerHistorialGrupal } from "../../api/chat";
+import type { Mensaje } from '../../api/chat';
+
 import { aceptarOferta } from "../../api/servicio";
 import { useAuth } from "../../context/AuthContext";
 import { FaPaperPlane, FaDollarSign, FaCheck } from "react-icons/fa";
