@@ -1,11 +1,16 @@
 import { Outlet, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { Notificaciones } from "../components/Notificaciones";
-import { FaHome, FaPlusCircle, FaComments, FaUser } from "react-icons/fa";
+import { FaHome, FaPlusCircle, FaComments, FaUser, FaStar } from "react-icons/fa";
+import { TarjetaFlotanteRecomendaciones } from "../components/ml/TarjetaFlotanteRecomendaciones";
+import { useRecomendaciones } from "../../hooks/useRecomendaciones";
 
 export const ClienteLayout: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  
+  // Obtener recomendaciones - usar 1 como ID por defecto
+  const { tecnicos, loading } = useRecomendaciones(1, false);
 
   const handleLogout = () => {
     logout();
@@ -68,6 +73,14 @@ export const ClienteLayout: React.FC = () => {
               Mis Servicios
             </Link>
             <Link
+              to="/cliente/solicitudes"
+              className="flex items-center px-3 py-4 text-sm font-medium text-gray-700 border-b-2 border-transparent hover:border-indigo-500 hover:text-indigo-600"
+              title="Ver técnicos recomendados por IA"
+            >
+              <FaStar className="mr-2 text-yellow-500" />
+              Recomendados
+            </Link>
+            <Link
               to="/cliente/perfil"
               className="flex items-center px-3 py-4 text-sm font-medium text-gray-700 border-b-2 border-transparent hover:border-indigo-500 hover:text-indigo-600"
             >
@@ -82,6 +95,15 @@ export const ClienteLayout: React.FC = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Outlet />
       </main>
+
+      {/* Tarjeta Flotante de Recomendaciones */}
+      <TarjetaFlotanteRecomendaciones
+        tecnicos={tecnicos}
+        loading={loading}
+        posicion="bottom-right"
+        autoAbrir={true}
+        tiempoAutoAbrir={3000}
+      />
     </div>
   );
 };

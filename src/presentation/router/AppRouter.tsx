@@ -33,6 +33,7 @@ import { PerfilClientePage } from "../pages/cliente/PerfilClientePage";
 import { PerfilTecnicoPage } from "../pages/tecnico/PerfilTecnicoPage";
 import { PagoPage } from "../pages/cliente/PagoPage";
 import { CalificarTecnicoPage } from "../pages/cliente/CalificarTecnicoPage";
+import { TecnicosRecomendadosPage } from "../pages/TecnicosRecomendadosPage";
 
 export const AppRouter = () => {
   return (
@@ -79,6 +80,7 @@ export const AppRouter = () => {
           <Route path="servicios" element={<MisServiciosClientePage />} />
           <Route path="solicitud/:id/chat" element={<ChatGrupalPage />} />
           <Route path="solicitud/:id/ofertas" element={<ListaOfertasPage />} />
+          <Route path="solicitud/:id/recomendados" element={<TecnicosRecomendadosPage />} />
           <Route path="servicio/:id/chat" element={<ChatPrivadoPage />} />
           <Route path="servicio/:id/pago" element={<PagoPage />} />
           <Route path="servicio/:id/calificar" element={<CalificarTecnicoPage />} />
