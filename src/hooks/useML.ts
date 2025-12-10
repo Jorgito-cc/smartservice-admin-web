@@ -70,7 +70,7 @@ export const useRecomendacionesTecnicos = (
     autoCargar = true,
   } = options;
 
-  const [recomendaciones, setRecomendaciones] = useState<TecnicoConRecomendado[]>([]);
+  const [recomendaciones, setRecomendaciones] = useState<TecnicoConRecomendacion[]>([]);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [mlStatus, setMlStatus] = useState<MLServiceStatus | null>(null);

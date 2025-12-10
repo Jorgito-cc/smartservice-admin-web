@@ -184,18 +184,18 @@ export const useEstadisticasRecomendaciones = (
 
   const total = tecnicos.length;
   const promedioCaliificacion =
-    tecnicos.reduce((sum, t) => sum + t.calificacion_promedio, 0) / total;
+    tecnicos.reduce((sum, t) => sum + (t.calificacion_promedio ?? 0), 0) / total;
   const distanciaPromedio =
-    tecnicos.reduce((sum, t) => sum + t.distancia_km, 0) / total;
+    tecnicos.reduce((sum, t) => sum + (t.distancia_km ?? 0), 0) / total;
   const scorePromedio =
-    tecnicos.reduce((sum, t) => sum + t.score_recomendacion, 0) / total;
+    tecnicos.reduce((sum, t) => sum + (t.score_recomendacion ?? 0), 0) / total;
 
   const masExperimentado = [...tecnicos].sort(
-    (a, b) => b.servicios_realizados - a.servicios_realizados
+    (a, b) => (b.servicios_realizados ?? 0) - (a.servicios_realizados ?? 0)
   )[0];
 
   const masCercano = [...tecnicos].sort(
-    (a, b) => a.distancia_km - b.distancia_km
+    (a, b) => (a.distancia_km ?? 0) - (b.distancia_km ?? 0)
   )[0];
 
   return {
