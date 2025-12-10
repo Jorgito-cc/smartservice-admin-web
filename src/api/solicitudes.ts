@@ -7,7 +7,7 @@ export interface SolicitudData {
   descripcion: string;
   ubicacion_texto: string;
   precio_ofrecido?: number;
-  estado: "pendiente" | "asignado" | "en_proceso" | "finalizado" | "cancelado";
+  estado: "pendiente" | "con_ofertas" | "asignado" | "en_proceso" | "completado" | "cancelado";
   fecha_publicacion: string;
 }
 
@@ -15,7 +15,7 @@ export interface SolicitudUsuario {
   id_usuario: number;
   nombre: string;
   apellido: string;
-  email: string;
+  email?: string;
   telefono?: string;
   foto?: string;
 }
@@ -55,17 +55,17 @@ export interface RespuestaSolicitudes {
 
 /**
  * Obtener todas las solicitudes (admin)
- * GET /solicitud/admin/listar
+ * GET /solicitudes/admin/listar
  */
 export const listarTodasSolicitudes = async (): Promise<Solicitud[]> => {
   try {
-    const { data } = await api.get<Solicitud[]>("/solicitud/admin/listar");
+    const { data } = await api.get<Solicitud[]>("/solicitudes/admin/listar");
     return data || [];
   } catch (error) {
     console.error("Error en listarTodasSolicitudes:", error);
     // Fallback: intentar endpoint alternativo
     try {
-      const { data } = await api.get<Solicitud[]>("/solicitud");
+      const { data } = await api.get<Solicitud[]>("/solicitudes");
       return data || [];
     } catch (fallbackError) {
       console.error("Error en fallback:", fallbackError);
@@ -76,11 +76,11 @@ export const listarTodasSolicitudes = async (): Promise<Solicitud[]> => {
 
 /**
  * Obtener solicitud por ID
- * GET /solicitud/:id
+ * GET /solicitudes/:id
  */
 export const obtenerSolicitudPorId = async (id: number): Promise<Solicitud | null> => {
   try {
-    const { data } = await api.get<Solicitud>(`/solicitud/${id}`);
+    const { data } = await api.get<Solicitud>(`/solicitudes/${id}`);
     return data;
   } catch (error) {
     console.error(`Error obteniendo solicitud ${id}:`, error);
@@ -90,14 +90,14 @@ export const obtenerSolicitudPorId = async (id: number): Promise<Solicitud | nul
 
 /**
  * Cambiar estado de solicitud
- * PUT /solicitud/:id/estado
+ * PUT /solicitudes/:id/estado
  */
 export const cambiarEstadoSolicitud = async (
   id: number,
   estado: string
 ): Promise<Solicitud | null> => {
   try {
-    const { data } = await api.put<Solicitud>(`/solicitud/${id}/estado`, { estado });
+    const { data } = await api.put<Solicitud>(`/solicitudes/${id}/estado`, { estado });
     return data;
   } catch (error) {
     console.error(`Error cambiando estado de solicitud ${id}:`, error);

@@ -4,13 +4,14 @@ import { FaEye, FaSpinner } from "react-icons/fa";
 import ReassignModal from "./ReassignModal";
 import { listarTodasSolicitudes, type Solicitud } from "../../../api/solicitudes";
 
-type Status = "pendiente" | "asignado" | "en_proceso" | "finalizado" | "cancelado";
+type Status = "pendiente" | "con_ofertas" | "asignado" | "en_proceso" | "completado" | "cancelado";
 
 const statusMap: Record<Status, string> = {
   pendiente: "Pendiente",
+  con_ofertas: "Con Ofertas",
   asignado: "Asignado",
   en_proceso: "En Proceso",
-  finalizado: "Finalizado",
+  completado: "Completado",
   cancelado: "Cancelado"
 };
 
@@ -47,10 +48,12 @@ export const RequestListPage = () => {
     switch (status) {
       case "pendiente":
         return "bg-yellow-100 text-yellow-700";
+      case "con_ofertas":
+        return "bg-blue-100 text-blue-700";
       case "asignado":
       case "en_proceso":
-        return "bg-blue-100 text-blue-700";
-      case "finalizado":
+        return "bg-indigo-100 text-indigo-700";
+      case "completado":
         return "bg-green-100 text-green-700";
       case "cancelado":
         return "bg-red-100 text-red-700";
@@ -85,7 +88,7 @@ export const RequestListPage = () => {
 
       {/* Tabs */}
       <div className="flex gap-3 mb-5 flex-wrap">
-        {(["pendiente", "asignado", "en_proceso", "finalizado", "cancelado"] as Status[]).map((s) => (
+        {(["pendiente", "con_ofertas", "asignado", "en_proceso", "completado", "cancelado"] as Status[]).map((s) => (
           <button
             key={s}
             onClick={() => setSelectedStatus(s)}
