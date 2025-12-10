@@ -7,7 +7,7 @@
 
 import React, { useState } from "react";
 import { Sparkles, ChevronLeft, ChevronRight, X } from "lucide-react";
-import { TecnicoConRecomendacion } from "../../../types/ml";
+import type { TecnicoConRecomendacion } from "../../../types/ml";
 
 interface Props {
   tecnicos: TecnicoConRecomendacion[];

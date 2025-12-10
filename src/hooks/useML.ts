@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { TecnicoConRecomendacion, MLServiceStatus } from "../types/ml";
+import type { TecnicoConRecomendacion, MLServiceStatus } from "../types/ml";
 import {
   obtenerTecnicosConRecomendaciones,
   verificarSaludML,

@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { obtenerRecomendacionesTecnicos, verificarSaludML } from "../api/ml";
-import { TecnicoConRecomendacion, MLServiceStatus } from "../types/ml";
+import type { TecnicoConRecomendacion, MLServiceStatus } from "../types/ml";
 
 interface UseRecomendacionesReturn {
   tecnicos: TecnicoConRecomendacion[];

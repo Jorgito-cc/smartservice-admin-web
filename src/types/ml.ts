@@ -110,13 +110,13 @@ export interface TecnicoConRecomendacion {
   apellido: string;
 
   /** Email de contacto */
-  email: string;
+  email: string | null;
 
   /** Teléfono de contacto */
-  telefono: string;
+  telefono: string | null;
 
   /** URL o path de foto de perfil */
-  foto: string | null;
+  foto: string | null | undefined;
 
   /** Rating promedio (1-5) */
   calificacion_promedio: number;
@@ -125,7 +125,7 @@ export interface TecnicoConRecomendacion {
   disponibilidad: boolean;
 
   /** Descripción/biografía profesional */
-  descripcion: string;
+  descripcion?: string | null;
 
   /** Lista de especialidades */
   especialidades: Array<{
@@ -137,13 +137,22 @@ export interface TecnicoConRecomendacion {
   score_recomendacion: number;
 
   /** Ranking entre las recomendaciones (1 = mejor) */
-  ranking: number;
+  ranking?: number;
 
   /** Distancia desde cliente (en km) */
   distancia_km: number;
 
   /** Explicación breve de por qué fue recomendado */
-  razon_recomendacion: string;
+  razon_recomendacion?: string;
+
+  /** Cantidad de servicios realizados por el técnico */
+  servicios_realizados?: number;
+
+  /** Total de ofertas enviadas por el técnico */
+  ofertas_totales?: number;
+
+  /** Método de pago preferido o disponible */
+  metodo_pago?: string | null;
 }
 
 // ============================================

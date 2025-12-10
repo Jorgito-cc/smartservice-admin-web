@@ -8,7 +8,7 @@
 import React, { useState, useEffect } from "react";
 import { ChevronUp, X, Sparkles } from "lucide-react";
 import { VisualizadorRecomendacionesRápido } from "./VisualizadorRecomendacionesRápido";
-import { TecnicoConRecomendacion } from "../../../types/ml";
+import type  { TecnicoConRecomendacion } from "../../../types/ml";
 
 interface Props {
   tecnicos: TecnicoConRecomendacion[];

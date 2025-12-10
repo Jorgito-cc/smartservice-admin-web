@@ -7,7 +7,7 @@
 import React, { useEffect, useState } from "react";
 import { Star, MapPin, TrendingUp, Loader, AlertTriangle, Sparkles } from "lucide-react";
 import { obtenerRecomendacionesTecnicos, verificarSaludML } from "../../../api/ml";
-import { TecnicoConRecomendacion } from "../../../types/ml";
+import type { TecnicoConRecomendacion } from "../../../types/ml";
 
 interface Props {
   id_solicitud: number;

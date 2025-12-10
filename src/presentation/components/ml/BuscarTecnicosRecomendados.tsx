@@ -8,7 +8,7 @@
 import React, { useEffect, useState } from "react";
 import { Star, MapPin, Zap, TrendingUp, AlertTriangle, Loader } from "lucide-react";
 import { obtenerTecnicosConRecomendaciones, verificarSaludML } from "../../../api/ml";
-import { TecnicoConRecomendacion, MLServiceStatus } from "../../../types/ml";
+import type { TecnicoConRecomendacion, MLServiceStatus } from "../../../types/ml";
 
 interface Props {
   id_solicitud: number;

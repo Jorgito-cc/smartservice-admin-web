@@ -5,14 +5,16 @@
  */
 
 import { api } from "./axios";
-import {
+import type {
   MLRecomendacionRequest,
-  MLRecomendacionResponse,
   MLHealthResponse,
   TecnicoConRecomendacion,
+} from "../types/ml";
+import {
   ML_REQUEST_TIMEOUT,
   ML_MAX_RETRIES,
   ML_RETRY_DELAY,
+  ML_CACHE_DURATION,
 } from "../types/ml";
 
 /**
@@ -107,6 +109,37 @@ export const obtenerInfoModelo = async () => {
     throw error;
   }
 };
+
+// --- Simple caché en memoria para recomendaciones (exportado para hooks que lo usan)
+type CacheEntry = {
+  recomendaciones: TecnicoConRecomendacion[];
+  timestamp: number;
+};
+
+const _cache = new Map<number, CacheEntry>();
+
+export const recomendacionesCache = {
+  async obtener(id_solicitud: number): Promise<TecnicoConRecomendacion[]> {
+    const entry = _cache.get(id_solicitud);
+    const ahora = Date.now();
+    if (entry && ahora - entry.timestamp < ML_CACHE_DURATION) {
+      return entry.recomendaciones;
+    }
+    // Si no hay cache o está expirado, obtener desde la API y guardar
+    const datos = await obtenerRecomendacionesTecnicos(id_solicitud);
+    _cache.set(id_solicitud, { recomendaciones: datos, timestamp: ahora });
+    return datos;
+  },
+  limpiar(id_solicitud: number) {
+    _cache.delete(id_solicitud);
+  },
+  limpiarTodos() {
+    _cache.clear();
+  },
+};
+
+// Alias de compatibilidad: algunos hooks/componentes importan este nombre
+export const obtenerTecnicosConRecomendaciones = obtenerRecomendacionesTecnicos;
 
 // Re-export tipos
 export type { TecnicoConRecomendacion, MLHealthResponse };
