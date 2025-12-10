@@ -11,7 +11,6 @@ import {
   MapPin,
   Phone,
   Mail,
-  Badge,
   Zap,
   TrendingUp,
   AlertTriangle,
@@ -20,7 +19,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { obtenerRecomendacionesTecnicos, verificarSaludML } from "../../api/ml";
-import { TecnicoConRecomendacion, MLServiceStatus } from "../../types/ml";
+import type { TecnicoConRecomendacion, MLServiceStatus } from "../../types/ml";
 
 interface TecnicoConRanking extends TecnicoConRecomendacion {
   ranking: number;
@@ -237,10 +236,10 @@ export const TecnicosRecomendadosPage: React.FC = () => {
                         {tecnico.nombre} {tecnico.apellido}
                       </h3>
                       {tecnico.disponibilidad && (
-                        <Badge variant="success" className="bg-green-100 text-green-800">
+                        <span className="inline-flex items-center bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-semibold">
                           <CheckCircle2 className="w-3 h-3 mr-1" />
                           Disponible
-                        </Badge>
+                        </span>
                       )}
                     </div>
 

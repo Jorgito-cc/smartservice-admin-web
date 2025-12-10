@@ -7,7 +7,7 @@
 
 import React, { useState } from "react";
 import { ChevronDown, Sparkles } from "lucide-react";
-import type { TarjetaRecomendacionesMini } from "../../components/ml/TarjetaRecomendacionesMini";
+import { TarjetaRecomendacionesMini } from "../../components/ml/TarjetaRecomendacionesMini";
 import type { TecnicoConRecomendacion } from "../../../types/ml";
 
 interface Solicitud {

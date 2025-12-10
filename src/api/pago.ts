@@ -7,6 +7,7 @@ export interface PagoServicio {
   comision_empresa: number;
   monto_tecnico: number;
   estado: "pendiente" | "pagado" | "cancelado" | "fallido";
+  metodo_pago?: "tarjeta" | "qr" | "efectivo" | "movil" | string;
   stripe_payment_id: string | null;
   fecha_pago: string | null;
   ServicioAsignado?: {

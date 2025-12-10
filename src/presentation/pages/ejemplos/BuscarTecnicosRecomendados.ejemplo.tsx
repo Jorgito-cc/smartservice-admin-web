@@ -8,7 +8,7 @@
 import React, { useState } from "react";
 import { BuscarTecnicosRecomendados } from "@/presentation/components/ml/BuscarTecnicosRecomendados";
 import { useRecomendacionesTecnicos, useSaludML } from "@/hooks/useML";
-import { TecnicoConRecomendacion } from "@/types/ml";
+import type { TecnicoConRecomendacion } from "@/types/ml";
 
 /**
  * Ejemplo 1: Usar el componente completo (más simple)
@@ -139,7 +139,7 @@ export const BuscarTecnicosPage_Ejemplo1 = () => {
                       <strong>Especialidades:</strong>
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      {tecnicoSeleccionado.especialidades.map((esp, idx) => (
+                      {tecnicoSeleccionado.especialidades.map((esp: any, idx: number) => (
                         <span
                           key={idx}
                           className="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full"

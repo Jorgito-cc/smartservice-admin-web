@@ -25,7 +25,7 @@ export interface TecnicoTop {
   id_tecnico: number;
   nombre: string;
   apellido: string;
-  foto?: string;
+  foto?: string | null;
   total_servicios: number;
   calificacion: number;
 }

@@ -195,7 +195,7 @@ const TarjetaTecnicoRecomendado: React.FC<TarjetaProps> = ({ tecnico, onSelect }
         </div>
 
         {/* Badge de ranking */}
-        {tecnico.ranking <= 3 && (
+        {tecnico.ranking !== undefined && tecnico.ranking <= 3 && (
           <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-white px-2 py-1 rounded text-xs font-bold">
             #{tecnico.ranking}
           </div>
