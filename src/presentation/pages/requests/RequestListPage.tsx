@@ -1,37 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { api } from "../../../api/axios";
 import { FaEye, FaSpinner } from "react-icons/fa";
 import ReassignModal from "./ReassignModal";
+import { listarTodasSolicitudes, type Solicitud } from "../../../api/solicitudes";
 
 type Status = "pendiente" | "asignado" | "en_proceso" | "finalizado" | "cancelado";
-
-interface Solicitud {
-  id_solicitud: number;
-  id_cliente: number;
-  id_categoria: number;
-  descripcion: string;
-  ubicacion_texto: string;
-  precio_ofrecido?: number;
-  estado: Status;
-  fecha_publicacion: string;
-  Cliente?: {
-    Usuario?: {
-      nombre: string;
-      apellido: string;
-    };
-  };
-  Categoria?: {
-    nombre: string;
-  };
-  ServicioAsignado?: {
-    id_tecnico: number;
-    Tecnico?: {
-      nombre: string;
-      apellido: string;
-    };
-  };
-}
 
 const statusMap: Record<Status, string> = {
   pendiente: "Pendiente",
@@ -46,6 +19,7 @@ export const RequestListPage = () => {
   const [selectedStatus, setSelectedStatus] = useState<Status>("pendiente");
   const [selectedRequest, setSelectedRequest] = useState<Solicitud | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -55,11 +29,13 @@ export const RequestListPage = () => {
   const cargarSolicitudes = async () => {
     try {
       setLoading(true);
-      // Endpoint para admin que lista todas las solicitudes
-      const { data } = await api.get<Solicitud[]>("/solicitud/admin/listar");
+      setError(null);
+      const data = await listarTodasSolicitudes();
       setSolicitudes(data);
-    } catch (error) {
-      console.error("Error cargando solicitudes:", error);
+    } catch (err) {
+      console.error("Error cargando solicitudes:", err);
+      setError("Error al cargar las solicitudes. Por favor, intenta de nuevo.");
+      setSolicitudes([]);
     } finally {
       setLoading(false);
     }
@@ -87,6 +63,16 @@ export const RequestListPage = () => {
     return (
       <div className="flex justify-center items-center h-64">
         <FaSpinner className="animate-spin text-4xl text-indigo-600" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          {error}
+        </div>
       </div>
     );
   }
@@ -150,8 +136,8 @@ export const RequestListPage = () => {
                     {solicitud.descripcion}
                   </td>
                   <td className="px-4 py-3">
-                    {solicitud.ServicioAsignado?.Tecnico
-                      ? `${solicitud.ServicioAsignado.Tecnico.nombre} ${solicitud.ServicioAsignado.Tecnico.apellido}`
+                    {solicitud.ServicioAsignado?.Tecnico?.Usuario
+                      ? `${solicitud.ServicioAsignado.Tecnico.Usuario.nombre} ${solicitud.ServicioAsignado.Tecnico.Usuario.apellido}`
                       : "Sin asignar"}
                   </td>
                   <td className="px-4 py-3">

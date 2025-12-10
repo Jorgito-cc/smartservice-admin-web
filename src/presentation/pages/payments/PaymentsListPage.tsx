@@ -1,34 +1,11 @@
 import { useState, useEffect } from "react";
-import { api } from "../../../api/axios";
 import { FaSpinner, FaFilePdf, FaEye, FaCreditCard, FaQrcode, FaMoneyBillWave, FaMobileAlt } from "react-icons/fa";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import PaymentDetailModal from "./PaymentDetailModal";
+import { listarTodosPagos, type PagoServicio } from "../../../api/pago";
 
-interface Pago {
-  id_pago: number;
-  id_servicio: number;
-  monto_total: number;
-  comision_empresa: number;
-  monto_tecnico: number;
-  estado: "pendiente" | "pagado" | "fallido";
-  metodo_pago: "tarjeta" | "qr" | "efectivo" | "movil";
-  fecha_pago: string;
-  ServicioAsignado?: {
-    SolicitudServicio?: {
-      Cliente?: {
-        Usuario?: {
-          nombre: string;
-          apellido: string;
-        };
-      };
-    };
-    Tecnico?: {
-      nombre: string;
-      apellido: string;
-    };
-  };
-}
+type Pago = PagoServicio;
 
 export const PaymentsListPage = () => {
   const [pagos, setPagos] = useState<Pago[]>([]);
@@ -37,6 +14,7 @@ export const PaymentsListPage = () => {
   const [selectedMetodo, setSelectedMetodo] = useState<string>("todos");
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedPago, setSelectedPago] = useState<Pago | null>(null);
 
   useEffect(() => {
@@ -50,10 +28,13 @@ export const PaymentsListPage = () => {
   const cargarPagos = async () => {
     try {
       setLoading(true);
-      const { data } = await api.get<Pago[]>("/pago/admin/listar");
+      setError(null);
+      const data = await listarTodosPagos();
       setPagos(data);
     } catch (error) {
       console.error("Error cargando pagos:", error);
+      setError("Error al cargar los pagos. Por favor, intenta de nuevo.");
+      setPagos([]);
     } finally {
       setLoading(false);
     }
@@ -80,7 +61,7 @@ export const PaymentsListPage = () => {
           p.ServicioAsignado?.SolicitudServicio?.Cliente?.Usuario?.nombre
             ?.toLowerCase()
             .includes(searchTerm.toLowerCase()) ||
-          p.ServicioAsignado?.Tecnico?.nombre?.toLowerCase().includes(searchTerm.toLowerCase())
+          p.ServicioAsignado?.Tecnico?.Usuario?.nombre?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -117,12 +98,12 @@ export const PaymentsListPage = () => {
       p.id_pago,
       `${p.ServicioAsignado?.SolicitudServicio?.Cliente?.Usuario?.nombre || "N/A"} ${p.ServicioAsignado?.SolicitudServicio?.Cliente?.Usuario?.apellido || ""
       }`,
-      `${p.ServicioAsignado?.Tecnico?.nombre || "N/A"} ${p.ServicioAsignado?.Tecnico?.apellido || ""
+      `${p.ServicioAsignado?.Tecnico?.Usuario?.nombre || "N/A"} ${p.ServicioAsignado?.Tecnico?.Usuario?.apellido || ""
       }`,
       `Bs. ${parseFloat(p.monto_total.toString()).toFixed(2)}`,
       p.metodo_pago || "tarjeta",
       p.estado,
-      new Date(p.fecha_pago).toLocaleDateString("es-BO"),
+      p.fecha_pago ? new Date(p.fecha_pago).toLocaleDateString("es-BO") : "N/A",
     ]);
 
     autoTable(doc, {
@@ -228,6 +209,7 @@ export const PaymentsListPage = () => {
       {/* Filtros */}
       <div className="flex gap-4 mb-6 flex-wrap">
         <select
+          title="Filtrar por estado"
           value={selectedEstado}
           onChange={(e) => setSelectedEstado(e.target.value)}
           className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
@@ -239,6 +221,7 @@ export const PaymentsListPage = () => {
         </select>
 
         <select
+          title="Filtrar por método de pago"
           value={selectedMetodo}
           onChange={(e) => setSelectedMetodo(e.target.value)}
           className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
@@ -295,8 +278,8 @@ export const PaymentsListPage = () => {
                     {pago.ServicioAsignado?.SolicitudServicio?.Cliente?.Usuario?.apellido}
                   </td>
                   <td className="px-4 py-3">
-                    {pago.ServicioAsignado?.Tecnico?.nombre}{" "}
-                    {pago.ServicioAsignado?.Tecnico?.apellido}
+                    {pago.ServicioAsignado?.Tecnico?.Usuario?.nombre}{" "}
+                    {pago.ServicioAsignado?.Tecnico?.Usuario?.apellido}
                   </td>
                   <td className="px-4 py-3 font-semibold text-green-600">
                     Bs. {parseFloat(pago.monto_total.toString()).toFixed(2)}
@@ -323,7 +306,7 @@ export const PaymentsListPage = () => {
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    {new Date(pago.fecha_pago).toLocaleDateString("es-BO")}
+                    {pago.fecha_pago ? new Date(pago.fecha_pago).toLocaleDateString("es-BO") : "N/A"}
                   </td>
                   <td className="px-4 py-3 text-center">
                     <button

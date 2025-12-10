@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { api } from "../../../api/axios";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -16,6 +15,16 @@ import { Bar, Pie, Line } from "react-chartjs-2";
 import { FaSpinner, FaFilePdf, FaChartBar, FaChartPie, FaChartLine } from "react-icons/fa";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { 
+  getKPIs, 
+  getServiciosPorCategoria, 
+  getIngresosPorPeriodo, 
+  getTecnicosTop,
+  type KPIs,
+  type ServicioPorCategoria,
+  type Ingreso,
+  type TecnicoTop
+} from "../../../api/reportes";
 
 // Registrar componentes de Chart.js
 ChartJS.register(
@@ -30,42 +39,13 @@ ChartJS.register(
   PointElement
 );
 
-interface KPIs {
-  total_servicios: number;
-  servicios_completados: number;
-  total_ingresos: string;
-  total_clientes: number;
-  total_tecnicos: number;
-  tasa_completacion: string;
-}
-
-interface ServicioPorCategoria {
-  categoria: string;
-  total: number;
-}
-
-interface Ingreso {
-  fecha: string;
-  total: number;
-  comision: number;
-  monto_tecnico: number;
-}
-
-interface TecnicoTop {
-  id_tecnico: number;
-  nombre: string;
-  apellido: string;
-  foto?: string;
-  total_servicios: number;
-  calificacion: number;
-}
-
 export const ReportsBIPage = () => {
   const [kpis, setKpis] = useState<KPIs | null>(null);
   const [serviciosPorCategoria, setServiciosPorCategoria] = useState<ServicioPorCategoria[]>([]);
   const [ingresos, setIngresos] = useState<Ingreso[]>([]);
   const [tecnicosTop, setTecnicosTop] = useState<TecnicoTop[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
 
@@ -84,19 +64,21 @@ export const ReportsBIPage = () => {
   const cargarDatos = async () => {
     try {
       setLoading(true);
+      setError(null);
       const [kpisRes, categoriasRes, ingresosRes, tecnicosRes] = await Promise.all([
-        api.get("/reportes/resumen-general"),
-        api.get("/reportes/servicios-por-categoria"),
-        api.get(`/reportes/ingresos?desde=${fechaDesde}&hasta=${fechaHasta}`),
-        api.get("/reportes/tecnicos-top?limit=10"),
+        getKPIs(),
+        getServiciosPorCategoria(),
+        getIngresosPorPeriodo(),
+        getTecnicosTop(),
       ]);
 
-      setKpis(kpisRes.data);
-      setServiciosPorCategoria(categoriasRes.data);
-      setIngresos(ingresosRes.data);
-      setTecnicosTop(tecnicosRes.data);
+      setKpis(kpisRes);
+      setServiciosPorCategoria(categoriasRes);
+      setIngresos(ingresosRes);
+      setTecnicosTop(tecnicosRes);
     } catch (error) {
       console.error("Error cargando reportes:", error);
+      setError("Error al cargar los reportes. Por favor, intenta de nuevo.");
     } finally {
       setLoading(false);
     }
@@ -120,12 +102,12 @@ export const ReportsBIPage = () => {
 
     if (kpis) {
       const kpiData = [
-        ["Total Servicios", kpis.total_servicios],
-        ["Servicios Completados", kpis.servicios_completados],
+        ["Total Servicios", kpis.total_servicios.toString()],
+        ["Servicios Completados", kpis.servicios_completados.toString()],
         ["Tasa de Completación", `${kpis.tasa_completacion}%`],
         ["Ingresos Totales", `Bs. ${kpis.total_ingresos}`],
-        ["Total Clientes", kpis.total_clientes],
-        ["Total Técnicos", kpis.total_tecnicos],
+        ["Total Clientes", kpis.total_clientes.toString()],
+        ["Total Técnicos", kpis.total_tecnicos.toString()],
       ];
 
       autoTable(doc, {
@@ -142,7 +124,7 @@ export const ReportsBIPage = () => {
     doc.setFontSize(14);
     doc.text("Servicios por Categoría", 14, 22);
 
-    const categoriaData = serviciosPorCategoria.map((c) => [c.categoria, c.total]);
+    const categoriaData = serviciosPorCategoria.map((c) => [c.categoria, c.total.toString()]);
 
     autoTable(doc, {
       startY: 28,
@@ -159,8 +141,8 @@ export const ReportsBIPage = () => {
 
     const tecnicoData = tecnicosTop.map((t) => [
       `${t.nombre} ${t.apellido}`,
-      t.total_servicios,
-      t.calificacion.toFixed(1),
+      t.total_servicios.toString(),
+      t.calificacion.toFixed(2),
     ]);
 
     autoTable(doc, {
@@ -243,6 +225,16 @@ export const ReportsBIPage = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          {error}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -266,6 +258,7 @@ export const ReportsBIPage = () => {
           </label>
           <input
             type="date"
+            title="Fecha desde"
             value={fechaDesde}
             onChange={(e) => setFechaDesde(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
@@ -277,6 +270,7 @@ export const ReportsBIPage = () => {
           </label>
           <input
             type="date"
+            title="Fecha hasta"
             value={fechaHasta}
             onChange={(e) => setFechaHasta(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
@@ -318,64 +312,70 @@ export const ReportsBIPage = () => {
       {/* Gráficos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Servicios por Categoría */}
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-lg">
-          <div className="flex items-center gap-2 mb-4">
-            <FaChartPie className="text-indigo-600 text-xl" />
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
-              Servicios por Categoría
-            </h3>
+        {serviciosPorCategoria.length > 0 && (
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-lg">
+            <div className="flex items-center gap-2 mb-4">
+              <FaChartPie className="text-indigo-600 text-xl" />
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+                Servicios por Categoría
+              </h3>
+            </div>
+            <Pie data={categoriaChartData} />
           </div>
-          <Pie data={categoriaChartData} />
-        </div>
+        )}
 
         {/* Top Técnicos */}
+        {tecnicosTop.length > 0 && (
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-lg">
+            <div className="flex items-center gap-2 mb-4">
+              <FaChartBar className="text-indigo-600 text-xl" />
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+                Top 10 Técnicos
+              </h3>
+            </div>
+            <Bar
+              data={tecnicosChartData}
+              options={{
+                indexAxis: "y" as const,
+                responsive: true,
+                plugins: {
+                  legend: {
+                    display: false,
+                  },
+                },
+              }}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Ingresos en el Tiempo */}
+      {ingresos.length > 0 && (
         <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-lg">
           <div className="flex items-center gap-2 mb-4">
-            <FaChartBar className="text-indigo-600 text-xl" />
+            <FaChartLine className="text-indigo-600 text-xl" />
             <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
-              Top 10 Técnicos
+              Ingresos en el Tiempo
             </h3>
           </div>
-          <Bar
-            data={tecnicosChartData}
+          <Line
+            data={ingresosChartData}
             options={{
-              indexAxis: "y",
               responsive: true,
               plugins: {
                 legend: {
-                  display: false,
+                  position: "top" as const,
+                },
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
                 },
               },
             }}
           />
         </div>
-      </div>
-
-      {/* Ingresos en el Tiempo */}
-      <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-lg">
-        <div className="flex items-center gap-2 mb-4">
-          <FaChartLine className="text-indigo-600 text-xl" />
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
-            Ingresos en el Tiempo
-          </h3>
-        </div>
-        <Line
-          data={ingresosChartData}
-          options={{
-            responsive: true,
-            plugins: {
-              legend: {
-                position: "top",
-              },
-            },
-            scales: {
-              y: {
-                beginAtZero: true,
-              },
-            },
-          }}
-        />
-      </div>
+      )}
 
       {/* Tabla de Técnicos */}
       <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-lg">

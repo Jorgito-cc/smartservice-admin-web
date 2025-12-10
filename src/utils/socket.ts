@@ -14,7 +14,8 @@ export const initSocket = (token: string, userId: number) => {
     socket.disconnect();
   }
 
-  socket = io("https://smartservicebackend-production.up.railway.app", {
+  //socket = io("https://smartservicebackend-production.up.railway.app", {
+      socket = io("http://localhost:4000", {
     auth: { 
       token: token 
     },
