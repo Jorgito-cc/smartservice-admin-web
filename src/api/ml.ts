@@ -34,6 +34,11 @@ export const obtenerRecomendacionesTecnicos = async (
     try {
       // Request al backend proxy
       const payload: MLRecomendacionRequest = { id_solicitud };
+      
+      console.log(`[Frontend ML] 📤 Enviando a Node.js:`);
+      console.log(JSON.stringify(payload, null, 2));
+      console.log(`[Frontend ML] Endpoint: POST /api/ml/recomendar`);
+      
       const { data } = await api.post<{
         id_solicitud: number;
         tecnicos_recomendados: TecnicoConRecomendacion[];
@@ -42,13 +47,24 @@ export const obtenerRecomendacionesTecnicos = async (
         timeout: ML_REQUEST_TIMEOUT,
       });
 
+      console.log(`[Frontend ML] ✅ Respuesta recibida de Node.js`);
+      console.log(`[Frontend ML] 🔍 RESPUESTA COMPLETA:`);
+      console.log(JSON.stringify(data, null, 2));
+
       // Respuesta enriquecida del backend con datos de técnico
       if (!data.tecnicos_recomendados || data.tecnicos_recomendados.length === 0) {
         console.warn(`[ML] Sin recomendaciones para solicitud ${id_solicitud}`);
         return [];
       }
 
-      console.log(`[ML] Recomendaciones obtenidas: ${data.total} técnicos`);
+      console.log(`[ML] ✅ Recomendaciones procesadas: ${data.total} técnicos`);
+      console.log(`[ML] 📊 Técnicos recomendados:`, data.tecnicos_recomendados.map(t => ({
+        id_tecnico: t.id_tecnico,
+        nombre: t.nombre,
+        score: t.score_recomendacion,
+        distancia_km: t.distancia_km
+      })));
+      
       return data.tecnicos_recomendados;
     } catch (error) {
       ultimoError = error as Error;
@@ -57,7 +73,7 @@ export const obtenerRecomendacionesTecnicos = async (
         // Esperar antes de reintentar (backoff exponencial)
         const delayMs = ML_RETRY_DELAY * Math.pow(2, intento);
         console.warn(
-          `[ML] Reintentando en ${delayMs}ms... (intento ${intento + 1}/${ML_MAX_RETRIES})`
+          `[ML] ⚠️ Reintentando en ${delayMs}ms... (intento ${intento + 1}/${ML_MAX_RETRIES})`
         );
         await new Promise((resolve) => setTimeout(resolve, delayMs));
       } else {
