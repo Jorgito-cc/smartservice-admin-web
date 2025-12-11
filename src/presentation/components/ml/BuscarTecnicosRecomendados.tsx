@@ -30,12 +30,16 @@ export const BuscarTecnicosRecomendados: React.FC<Props> = ({
   // Cargar recomendaciones al montar
   useEffect(() => {
     const cargar = async () => {
+      console.log(`[BuscarTecnicos] 🔍 INICIANDO - id_solicitud: ${id_solicitud}`);
       setCargando(true);
       setError(null);
 
       try {
         // Verificar salud del ML
+        console.log(`[BuscarTecnicos] 📡 Verificando salud...`);
         const health = await verificarSaludML();
+        console.log(`[BuscarTecnicos] ✅ Health check:`, health);
+        
         setMlStatus({
           disponible: health.status === "ok",
           modelos_listos: health.modelo_disponible,
@@ -43,19 +47,24 @@ export const BuscarTecnicosRecomendados: React.FC<Props> = ({
         });
 
         // Obtener recomendaciones
+        console.log(`[BuscarTecnicos] 🚀 Solicitando recomendaciones...`);
         const tecnicosRecomendados = await obtenerTecnicosConRecomendaciones(id_solicitud);
+        console.log(`[BuscarTecnicos] ✅ Recomendaciones recibidas:`, tecnicosRecomendados);
 
         if (tecnicosRecomendados.length === 0) {
+          console.warn(`[BuscarTecnicos] ⚠️ Sin técnicos disponibles`);
           setError("No hay técnicos disponibles para esta solicitud");
           setRecomendaciones([]);
         } else {
+          console.log(`[BuscarTecnicos] 📊 Técnicos encontrados: ${tecnicosRecomendados.length}`);
           setRecomendaciones(tecnicosRecomendados);
         }
       } catch (err) {
-        console.error("[BuscarTecnicos] Error:", err);
+        console.error("[BuscarTecnicos] ❌ ERROR:", err);
         setError(`Error al obtener recomendaciones: ${err instanceof Error ? err.message : "Error desconocido"}`);
         setRecomendaciones([]);
       } finally {
+        console.log(`[BuscarTecnicos] ⏹️ Carga finalizada`);
         setCargando(false);
       }
     };

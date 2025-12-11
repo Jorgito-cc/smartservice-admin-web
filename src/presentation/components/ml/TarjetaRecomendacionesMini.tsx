@@ -27,33 +27,48 @@ export const TarjetaRecomendacionesMini: React.FC<Props> = ({
   useEffect(() => {
     const cargar = async () => {
       try {
+        console.log(`[TarjetaMini] 🔍 INICIANDO CARGA - id_solicitud: ${id_solicitud}`);
         setCargando(true);
         setError(null);
 
         // Verificar salud
+        console.log(`[TarjetaMini] 📡 Verificando salud del servicio ML...`);
         const health = await verificarSaludML();
+        console.log(`[TarjetaMini] ✅ Salud: ${JSON.stringify(health)}`);
+        
         if (!health.modelo_disponible) {
+          console.error(`[TarjetaMini] ❌ Modelo no disponible`);
           setError("Servicio de recomendaciones no disponible");
           return;
         }
 
         // Obtener recomendaciones
+        console.log(`[TarjetaMini] 🚀 Solicitando recomendaciones...`);
         const recomendaciones = await obtenerRecomendacionesTecnicos(id_solicitud);
+        console.log(`[TarjetaMini] ✅ Recomendaciones recibidas: ${recomendaciones.length} técnicos`);
+        console.log(`[TarjetaMini] 📊 Datos:`, recomendaciones);
+        
         setTecnicos(recomendaciones.slice(0, maxMostrar));
 
         if (recomendaciones.length === 0) {
+          console.warn(`[TarjetaMini] ⚠️ Sin técnicos disponibles`);
           setError("Sin técnicos disponibles");
         }
       } catch (err) {
+        console.error(`[TarjetaMini] ❌ ERROR:`, err);
         setError("Error cargando recomendaciones");
         console.error(err);
       } finally {
+        console.log(`[TarjetaMini] ⏹️ Carga finalizada`);
         setCargando(false);
       }
     };
 
     if (id_solicitud) {
+      console.log(`[TarjetaMini] ⏳ useEffect activado con id_solicitud: ${id_solicitud}`);
       cargar();
+    } else {
+      console.warn(`[TarjetaMini] ⚠️ No hay id_solicitud`);
     }
   }, [id_solicitud, maxMostrar]);
 
