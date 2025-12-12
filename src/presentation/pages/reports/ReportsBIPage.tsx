@@ -1021,10 +1021,56 @@ export const ReportsBIPage = () => {
       {/* ==================== PAGOS ==================== */}
       {pagos.length > 0 && (
         <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-lg">
-          <h2 className="text-2xl font-bold mb-4">💰 Reportes BI - Pagos</h2>
+          <h2 className="text-2xl font-bold mb-6">💰 Reportes BI - Pagos</h2>
+
+          {/* Estadísticas de Pagos */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-4 rounded-lg">
+              <p className="text-sm opacity-90">Total Pagado</p>
+              <p className="text-3xl font-bold">
+                Bs.{" "}
+                {Number(
+                  pagos
+                    .filter((p) => p.estado === "pagado")
+                    .reduce(
+                      (sum, p) => sum + (Number(p.monto_total) || 0),
+                      0
+                    ) || 0
+                ).toFixed(2)}
+              </p>
+            </div>
+            <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white p-4 rounded-lg">
+              <p className="text-sm opacity-90">Total Pendiente</p>
+              <p className="text-3xl font-bold">
+                Bs.{" "}
+                {Number(
+                  pagos
+                    .filter((p) => p.estado === "pendiente")
+                    .reduce(
+                      (sum, p) => sum + (Number(p.monto_total) || 0),
+                      0
+                    ) || 0
+                ).toFixed(2)}
+              </p>
+            </div>
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-lg">
+              <p className="text-sm opacity-90">Comisión Empresa</p>
+              <p className="text-3xl font-bold">
+                Bs.{" "}
+                {Number(
+                  pagos
+                    .filter((p) => p.estado === "pagado")
+                    .reduce(
+                      (sum, p) => sum + (Number(p.comision_empresa) || 0),
+                      0
+                    ) || 0
+                ).toFixed(2)}
+              </p>
+            </div>
+          </div>
 
           {/* Botones de exportación */}
-          <div className="flex gap-2 mb-4 flex-wrap">
+          <div className="flex gap-2 mb-6 flex-wrap">
             <button
               onClick={() =>
                 exportarPDFTablas("Reporte Pagos", datosPagos, [
@@ -1073,40 +1119,268 @@ export const ReportsBIPage = () => {
             </button>
           </div>
 
-          {/* Gráfico */}
-          <div ref={contentRefPagos} className="bg-gray-50 p-4 rounded-lg">
-            <Bar
-              data={chartPagos}
-              options={{
-                responsive: true,
-                plugins: { legend: { position: "top" } },
-              }}
-            />
+          {/* Gráficos */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            {/* Pagos por Método */}
+            <div className="bg-gray-50 dark:bg-slate-800 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
+                Pagos por Método
+              </h3>
+              <Pie
+                data={{
+                  labels: ["Tarjeta", "QR", "Efectivo", "Móvil"],
+                  datasets: [
+                    {
+                      label: "Cantidad de Pagos",
+                      data: [
+                        pagos.filter(
+                          (p) =>
+                            (p.metodo_pago || "").toLowerCase() === "tarjeta"
+                        ).length,
+                        pagos.filter(
+                          (p) => (p.metodo_pago || "").toLowerCase() === "qr"
+                        ).length,
+                        pagos.filter(
+                          (p) =>
+                            (p.metodo_pago || "").toLowerCase() === "efectivo"
+                        ).length,
+                        pagos.filter(
+                          (p) => (p.metodo_pago || "").toLowerCase() === "movil"
+                        ).length,
+                      ],
+                      backgroundColor: [
+                        "rgba(54, 162, 235, 0.6)",
+                        "rgba(255, 206, 86, 0.6)",
+                        "rgba(75, 192, 192, 0.6)",
+                        "rgba(153, 102, 255, 0.6)",
+                      ],
+                      borderColor: [
+                        "rgba(54, 162, 235, 1)",
+                        "rgba(255, 206, 86, 1)",
+                        "rgba(75, 192, 192, 1)",
+                        "rgba(153, 102, 255, 1)",
+                      ],
+                      borderWidth: 1,
+                    },
+                  ],
+                }}
+              />
+            </div>
 
-            <div className="mt-6">
-              <h3 className="font-bold mb-2">Detalle de Pagos</h3>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm border-collapse">
-                  <thead className="bg-gray-200">
-                    <tr>
-                      <th className="border p-2">ID</th>
-                      <th className="border p-2">Monto</th>
-                      <th className="border p-2">Método</th>
-                      <th className="border p-2">Estado</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pagos.slice(0, 10).map((p) => (
-                      <tr key={p.id_pago} className="border">
-                        <td className="border p-2">{p.id_pago}</td>
-                        <td className="border p-2">Bs. {p.monto_total}</td>
-                        <td className="border p-2">{p.metodo_pago}</td>
-                        <td className="border p-2">{p.estado}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+            {/* Pagos por Estado */}
+            <div className="bg-gray-50 dark:bg-slate-800 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
+                Pagos por Estado
+              </h3>
+              <Bar
+                data={{
+                  labels: ["Pagado", "Pendiente", "Fallido"],
+                  datasets: [
+                    {
+                      label: "Cantidad",
+                      data: [
+                        pagos.filter((p) => p.estado === "pagado").length,
+                        pagos.filter((p) => p.estado === "pendiente").length,
+                        pagos.filter((p) => p.estado === "fallido").length,
+                      ],
+                      backgroundColor: [
+                        "rgba(34, 197, 94, 0.6)",
+                        "rgba(251, 146, 60, 0.6)",
+                        "rgba(239, 68, 68, 0.6)",
+                      ],
+                      borderColor: [
+                        "rgba(34, 197, 94, 1)",
+                        "rgba(251, 146, 60, 1)",
+                        "rgba(239, 68, 68, 1)",
+                      ],
+                      borderWidth: 1,
+                    },
+                  ],
+                }}
+                options={{
+                  responsive: true,
+                  plugins: {
+                    legend: {
+                      display: false,
+                    },
+                  },
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Ingresos por Día */}
+          {pagos.filter((p) => p.estado === "pagado" && p.fecha_pago).length >
+            0 && (
+            <div className="bg-gray-50 dark:bg-slate-800 p-6 rounded-lg mb-6">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
+                Ingresos por Día
+              </h3>
+              <Line
+                data={{
+                  labels: Object.keys(
+                    pagos
+                      .filter((p) => p.estado === "pagado" && p.fecha_pago)
+                      .reduce((acc, p) => {
+                        const fecha = new Date(
+                          p.fecha_pago!
+                        ).toLocaleDateString("es-BO");
+                        acc[fecha] =
+                          (acc[fecha] || 0) + (Number(p.monto_total) || 0);
+                        return acc;
+                      }, {} as Record<string, number>)
+                  ),
+                  datasets: [
+                    {
+                      label: "Ingresos Diarios",
+                      data: Object.values(
+                        pagos
+                          .filter((p) => p.estado === "pagado" && p.fecha_pago)
+                          .reduce((acc, p) => {
+                            const fecha = new Date(
+                              p.fecha_pago!
+                            ).toLocaleDateString("es-BO");
+                            acc[fecha] =
+                              (acc[fecha] || 0) + (Number(p.monto_total) || 0);
+                            return acc;
+                          }, {} as Record<string, number>)
+                      ),
+                      borderColor: "rgb(75, 192, 192)",
+                      backgroundColor: "rgba(75, 192, 192, 0.2)",
+                      tension: 0.4,
+                    },
+                  ],
+                }}
+                options={{
+                  responsive: true,
+                  plugins: {
+                    legend: {
+                      position: "top" as const,
+                    },
+                  },
+                  scales: {
+                    y: {
+                      beginAtZero: true,
+                    },
+                  },
+                }}
+              />
+            </div>
+          )}
+
+          {/* Tabla de Detalle de Pagos */}
+          <div className="bg-gray-50 dark:bg-slate-800 p-6 rounded-lg">
+            <h3 className="font-bold mb-4 text-lg">
+              Resumen de Métodos de Pago
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm border-collapse">
+                <thead className="bg-gray-200 dark:bg-slate-700">
+                  <tr>
+                    <th className="border p-2 text-left">Método</th>
+                    <th className="border p-2 text-left">Cantidad</th>
+                    <th className="border p-2 text-left">Porcentaje</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border hover:bg-gray-100 dark:hover:bg-slate-700">
+                    <td className="border p-2">Tarjeta</td>
+                    <td className="border p-2">
+                      {
+                        pagos.filter(
+                          (p) =>
+                            (p.metodo_pago || "").toLowerCase() === "tarjeta"
+                        ).length
+                      }
+                    </td>
+                    <td className="border p-2">
+                      {pagos.length > 0
+                        ? (
+                            (pagos.filter(
+                              (p) =>
+                                (p.metodo_pago || "").toLowerCase() ===
+                                "tarjeta"
+                            ).length /
+                              pagos.length) *
+                            100
+                          ).toFixed(2)
+                        : 0}
+                      %
+                    </td>
+                  </tr>
+                  <tr className="border hover:bg-gray-100 dark:hover:bg-slate-700">
+                    <td className="border p-2">QR</td>
+                    <td className="border p-2">
+                      {
+                        pagos.filter(
+                          (p) => (p.metodo_pago || "").toLowerCase() === "qr"
+                        ).length
+                      }
+                    </td>
+                    <td className="border p-2">
+                      {pagos.length > 0
+                        ? (
+                            (pagos.filter(
+                              (p) =>
+                                (p.metodo_pago || "").toLowerCase() === "qr"
+                            ).length /
+                              pagos.length) *
+                            100
+                          ).toFixed(2)
+                        : 0}
+                      %
+                    </td>
+                  </tr>
+                  <tr className="border hover:bg-gray-100 dark:hover:bg-slate-700">
+                    <td className="border p-2">Efectivo</td>
+                    <td className="border p-2">
+                      {
+                        pagos.filter(
+                          (p) =>
+                            (p.metodo_pago || "").toLowerCase() === "efectivo"
+                        ).length
+                      }
+                    </td>
+                    <td className="border p-2">
+                      {pagos.length > 0
+                        ? (
+                            (pagos.filter(
+                              (p) =>
+                                (p.metodo_pago || "").toLowerCase() ===
+                                "efectivo"
+                            ).length /
+                              pagos.length) *
+                            100
+                          ).toFixed(2)
+                        : 0}
+                      %
+                    </td>
+                  </tr>
+                  <tr className="border hover:bg-gray-100 dark:hover:bg-slate-700">
+                    <td className="border p-2">Móvil</td>
+                    <td className="border p-2">
+                      {
+                        pagos.filter(
+                          (p) => (p.metodo_pago || "").toLowerCase() === "movil"
+                        ).length
+                      }
+                    </td>
+                    <td className="border p-2">
+                      {pagos.length > 0
+                        ? (
+                            (pagos.filter(
+                              (p) =>
+                                (p.metodo_pago || "").toLowerCase() === "movil"
+                            ).length /
+                              pagos.length) *
+                            100
+                          ).toFixed(2)
+                        : 0}
+                      %
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
