@@ -271,3 +271,27 @@ export const getAconsejadorInteligente = async (
     };
   }
 };
+
+// Explicar Gráfico de Ingresos con IA
+export const getExplicarGraficoIngresos = async (
+  desde?: string,
+  hasta?: string
+) => {
+  try {
+    const params = new URLSearchParams();
+    if (desde) params.append("desde", desde);
+    if (hasta) params.append("hasta", hasta);
+
+    const { data } = await api.get("/analisis/explicar-grafico-ingresos", {
+      params,
+    });
+    return data;
+  } catch (error) {
+    console.error("Error obteniendo explicación del gráfico:", error);
+    return {
+      explicacion:
+        "No se pudo generar la explicación del gráfico. Intenta de nuevo.",
+      estadisticas: null,
+    };
+  }
+};

@@ -28,6 +28,7 @@ import {
   getTecnicosTop,
   getInterpretacionInteligente,
   getAconsejadorInteligente,
+  getExplicarGraficoIngresos,
   type KPIs,
   type ServicioPorCategoria,
   type Ingreso,
@@ -64,6 +65,12 @@ export const ReportsBIPage = () => {
   const [recomendaciones, setRecomendaciones] = useState<string | null>(null);
   const [loadingInterpretacion, setLoadingInterpretacion] = useState(false);
   const [loadingRecomendaciones, setLoadingRecomendaciones] = useState(false);
+
+  // Estados para explicación de gráfico
+  const [explicacionIngresos, setExplicacionIngresos] = useState<string | null>(
+    null
+  );
+  const [loadingExplicacion, setLoadingExplicacion] = useState(false);
 
   useEffect(() => {
     // Establecer fechas por defecto (último mes)
@@ -133,6 +140,25 @@ export const ReportsBIPage = () => {
       );
     } finally {
       setLoadingRecomendaciones(false);
+    }
+  };
+
+  // Generar Explicación del Gráfico de Ingresos
+  const generarExplicacionGrafico = async () => {
+    try {
+      setLoadingExplicacion(true);
+      const resultado = await getExplicarGraficoIngresos(
+        fechaDesde,
+        fechaHasta
+      );
+      setExplicacionIngresos(resultado.explicacion);
+    } catch (error) {
+      console.error("Error generando explicación:", error);
+      setExplicacionIngresos(
+        "Error al generar la explicación del gráfico. Intenta de nuevo."
+      );
+    } finally {
+      setLoadingExplicacion(false);
     }
   };
 
@@ -412,11 +438,26 @@ export const ReportsBIPage = () => {
       {/* Ingresos en el Tiempo */}
       {ingresos.length > 0 && (
         <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-lg">
-          <div className="flex items-center gap-2 mb-4">
-            <FaChartLine className="text-indigo-600 text-xl" />
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
-              Ingresos en el Tiempo
-            </h3>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <FaChartLine className="text-indigo-600 text-xl" />
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+                Ingresos en el Tiempo
+              </h3>
+            </div>
+            <button
+              onClick={generarExplicacionGrafico}
+              disabled={loadingExplicacion}
+              className="bg-teal-600 hover:bg-teal-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition text-sm font-semibold"
+            >
+              {loadingExplicacion ? (
+                <>
+                  <FaSpinner className="animate-spin" /> Analizando...
+                </>
+              ) : (
+                <>🔍 Explicar con IA</>
+              )}
+            </button>
           </div>
           <Line
             data={ingresosChartData}
@@ -434,6 +475,18 @@ export const ReportsBIPage = () => {
               },
             }}
           />
+
+          {/* Explicación del Gráfico */}
+          {explicacionIngresos && (
+            <div className="mt-6 p-4 bg-teal-50 dark:bg-slate-800 rounded-lg border-l-4 border-teal-500">
+              <h4 className="font-semibold text-teal-900 dark:text-teal-200 mb-2 flex items-center gap-2">
+                🤖 Análisis IA del Gráfico
+              </h4>
+              <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">
+                {explicacionIngresos}
+              </p>
+            </div>
+          )}
         </div>
       )}
 
