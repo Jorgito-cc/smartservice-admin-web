@@ -275,17 +275,20 @@ export const ReportsBIPage = () => {
       ? ((serviciosCompletados / totalServicios) * 100).toFixed(2)
       : 0;
 
-  const totalIngresos = ingresos.reduce((sum, i) => sum + (i.total || 0), 0);
+  const totalIngresos = ingresos.reduce(
+    (sum, i) => sum + (Number(i.total) || 0),
+    0
+  );
   const comisionEmpresa = ingresos.reduce(
-    (sum, i) => sum + (i.comision || 0),
+    (sum, i) => sum + (Number(i.comision) || 0),
     0
   );
   const totalPagado = pagos
     .filter((p) => p.estado === "pagado")
-    .reduce((sum, p) => sum + (p.monto_total || 0), 0);
+    .reduce((sum, p) => sum + (Number(p.monto_total) || 0), 0);
   const totalPendiente = pagos
     .filter((p) => p.estado === "pendiente")
-    .reduce((sum, p) => sum + (p.monto_total || 0), 0);
+    .reduce((sum, p) => sum + (Number(p.monto_total) || 0), 0);
 
   // Gráfica de ingresos en el tiempo
   const ingresosAgrupados: Record<string, { total: number; comision: number }> =
@@ -297,8 +300,8 @@ export const ReportsBIPage = () => {
     if (!ingresosAgrupados[fecha]) {
       ingresosAgrupados[fecha] = { total: 0, comision: 0 };
     }
-    ingresosAgrupados[fecha].total += i.total || 0;
-    ingresosAgrupados[fecha].comision += i.comision || 0;
+    ingresosAgrupados[fecha].total += Number(i.total) || 0;
+    ingresosAgrupados[fecha].comision += Number(i.comision) || 0;
   });
 
   const chartIngresos = {
@@ -308,7 +311,7 @@ export const ReportsBIPage = () => {
         label: "Ingresos Totales",
         data: Object.keys(ingresosAgrupados)
           .sort()
-          .map((f) => ingresosAgrupados[f].total),
+          .map((f) => Math.max(0, ingresosAgrupados[f].total || 0)),
         borderColor: "rgba(34, 197, 94, 1)",
         backgroundColor: "rgba(34, 197, 94, 0.1)",
         borderWidth: 2,
@@ -318,7 +321,7 @@ export const ReportsBIPage = () => {
         label: "Comisión Empresa",
         data: Object.keys(ingresosAgrupados)
           .sort()
-          .map((f) => ingresosAgrupados[f].comision),
+          .map((f) => Math.max(0, ingresosAgrupados[f].comision || 0)),
         borderColor: "rgba(239, 68, 68, 1)",
         backgroundColor: "rgba(239, 68, 68, 0.1)",
         borderWidth: 2,
@@ -560,7 +563,7 @@ export const ReportsBIPage = () => {
         <div className="bg-green-600 text-white p-6 rounded-lg shadow-lg">
           <div className="text-sm opacity-90">Ingresos Totales</div>
           <div className="text-3xl font-bold">
-            Bs. {totalIngresos.toFixed(2)}
+            Bs. {Number(totalIngresos || 0).toFixed(2)}
           </div>
           <div className="text-xs opacity-75 mt-1">Período seleccionado</div>
         </div>
@@ -577,10 +580,13 @@ export const ReportsBIPage = () => {
         <div className="bg-indigo-600 text-white p-6 rounded-lg shadow-lg">
           <div className="text-sm opacity-90">Comisión Empresa</div>
           <div className="text-3xl font-bold">
-            Bs. {comisionEmpresa.toFixed(2)}
+            Bs. {Number(comisionEmpresa || 0).toFixed(2)}
           </div>
           <div className="text-xs opacity-75 mt-1">
-            {((comisionEmpresa / totalIngresos) * 100).toFixed(1)}% de ingresos
+            {totalIngresos > 0
+              ? ((comisionEmpresa / totalIngresos) * 100).toFixed(1)
+              : 0}
+            % de ingresos
           </div>
         </div>
       </div>
@@ -592,7 +598,7 @@ export const ReportsBIPage = () => {
             Total Pagado
           </div>
           <div className="text-3xl font-bold text-green-600 mt-2">
-            Bs. {totalPagado.toFixed(2)}
+            Bs. {Number(totalPagado || 0).toFixed(2)}
           </div>
           <div className="text-xs text-gray-500 mt-2">
             {pagos.filter((p) => p.estado === "pagado").length} pagos
@@ -605,7 +611,7 @@ export const ReportsBIPage = () => {
             Total Pendiente
           </div>
           <div className="text-3xl font-bold text-orange-600 mt-2">
-            Bs. {totalPendiente.toFixed(2)}
+            Bs. {Number(totalPendiente || 0).toFixed(2)}
           </div>
           <div className="text-xs text-gray-500 mt-2">
             {pagos.filter((p) => p.estado === "pendiente").length} pagos
@@ -618,7 +624,7 @@ export const ReportsBIPage = () => {
             Comisión Empresa
           </div>
           <div className="text-3xl font-bold text-blue-600 mt-2">
-            Bs. {comisionEmpresa.toFixed(2)}
+            Bs. {Number(comisionEmpresa || 0).toFixed(2)}
           </div>
           <div className="text-xs text-gray-500 mt-2">
             Ganancia neta del período
