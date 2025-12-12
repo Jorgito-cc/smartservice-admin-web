@@ -46,16 +46,20 @@ export const PaymentsBI = () => {
       setLoading(true);
       const data = await listarTodosPagos();
 
-      // Filtrar por fecha
+      // Filtrar por fecha - incluir todo el día hasta las 23:59:59
       const pagosFiltrados = data.filter((p) => {
         if (!p.fecha_pago) return false;
         const fecha = new Date(p.fecha_pago);
-        return fecha >= new Date(fechaDesde) && fecha <= new Date(fechaHasta);
+        const desde = new Date(fechaDesde);
+        const hasta = new Date(fechaHasta);
+        hasta.setHours(23, 59, 59, 999); // Incluir todo el día
+        return fecha >= desde && fecha <= hasta;
       });
 
       setPagos(pagosFiltrados);
     } catch (error) {
       console.error("Error cargando pagos:", error);
+      setPagos([]);
     } finally {
       setLoading(false);
     }
@@ -66,15 +70,42 @@ export const PaymentsBI = () => {
     const hace30Dias = new Date();
     hace30Dias.setDate(hoy.getDate() - 30);
 
-    setFechaHasta(hoy.toISOString().split("T")[0]);
-    setFechaDesde(hace30Dias.toISOString().split("T")[0]);
-  }, []);
+    const fechaHastaStr = hoy.toISOString().split("T")[0];
+    const fechaDesdeStr = hace30Dias.toISOString().split("T")[0];
 
-  useEffect(() => {
-    if (fechaDesde && fechaHasta) {
-      cargarPagos();
-    }
-  }, [fechaDesde, fechaHasta, cargarPagos]);
+    setFechaHasta(fechaHastaStr);
+    setFechaDesde(fechaDesdeStr);
+
+    // Cargar datos inmediatamente con las fechas establecidas
+    setLoading(true);
+    listarTodosPagos()
+      .then((data) => {
+        // Si no hay datos, mostrar todos (para debug)
+        if (data.length === 0) {
+          setPagos([]);
+          setLoading(false);
+          return;
+        }
+
+        const desde = new Date(fechaDesdeStr);
+        const hasta = new Date(fechaHastaStr);
+        hasta.setHours(23, 59, 59, 999);
+
+        const pagosFiltrados = data.filter((p) => {
+          if (!p.fecha_pago) return true; // Incluir pagos sin fecha
+          const fecha = new Date(p.fecha_pago);
+          return fecha >= desde && fecha <= hasta;
+        });
+
+        // Si no hay datos filtrados, mostrar todos como fallback
+        setPagos(pagosFiltrados.length > 0 ? pagosFiltrados : data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error cargando pagos:", error);
+        setLoading(false);
+      });
+  }, []);
 
   // Calcular estadísticas
   const totalPagado = pagos
@@ -89,12 +120,18 @@ export const PaymentsBI = () => {
     .filter((p) => p.estado === "pagado")
     .reduce((sum, p) => sum + parseFloat(p.comision_empresa.toString()), 0);
 
-  // Pagos por método
+  // Pagos por método - normalizar valores
   const pagosPorMetodo = {
-    tarjeta: pagos.filter((p) => p.metodo_pago === "tarjeta").length,
-    qr: pagos.filter((p) => p.metodo_pago === "qr").length,
-    efectivo: pagos.filter((p) => p.metodo_pago === "efectivo").length,
-    movil: pagos.filter((p) => p.metodo_pago === "movil").length,
+    tarjeta: pagos.filter(
+      (p) => (p.metodo_pago || "").toLowerCase() === "tarjeta"
+    ).length,
+    qr: pagos.filter((p) => (p.metodo_pago || "").toLowerCase() === "qr")
+      .length,
+    efectivo: pagos.filter(
+      (p) => (p.metodo_pago || "").toLowerCase() === "efectivo"
+    ).length,
+    movil: pagos.filter((p) => (p.metodo_pago || "").toLowerCase() === "movil")
+      .length,
   };
 
   // Pagos por estado
