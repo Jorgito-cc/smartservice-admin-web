@@ -480,7 +480,7 @@ export const ReportsBIPage = () => {
           {explicacionIngresos && (
             <div className="mt-6 p-4 bg-teal-50 dark:bg-slate-800 rounded-lg border-l-4 border-teal-500">
               <h4 className="font-semibold text-teal-900 dark:text-teal-200 mb-2 flex items-center gap-2">
-                🤖 Análisis IA del Gráfico
+                🤖 Análisis IA del Gráfico 
               </h4>
               <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">
                 {explicacionIngresos}
