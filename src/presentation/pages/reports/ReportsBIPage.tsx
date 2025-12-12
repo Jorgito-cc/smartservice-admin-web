@@ -477,6 +477,87 @@ export const ReportsBIPage = () => {
     ],
   };
 
+  // Datos adicionales para usuarios
+  const usuariosPorEstado = {
+    activos: usuarios.filter((u) => u.estado).length,
+    deshabilitados: usuarios.filter((u) => !u.estado).length,
+  };
+
+  const tecnicosPorCalificacion: { [key: string]: number } = {
+    "Sin calificación": 0,
+    "0-2 estrellas": 0,
+    "2-3 estrellas": 0,
+    "3-4 estrellas": 0,
+    "4-5 estrellas": 0,
+  };
+
+  usuarios
+    .filter((u) => u.rol === "tecnico")
+    .forEach((u) => {
+      const cal = u.Tecnico?.calificacion_promedio || 0;
+      if (cal === 0) tecnicosPorCalificacion["Sin calificación"]++;
+      else if (cal < 2) tecnicosPorCalificacion["0-2 estrellas"]++;
+      else if (cal < 3) tecnicosPorCalificacion["2-3 estrellas"]++;
+      else if (cal < 4) tecnicosPorCalificacion["3-4 estrellas"]++;
+      else tecnicosPorCalificacion["4-5 estrellas"]++;
+    });
+
+  const tecnicosDisponibles = usuarios.filter(
+    (u) => u.rol === "tecnico" && u.Tecnico?.disponibilidad
+  ).length;
+  const tecnicosNoDisponibles = usuariosPorRol.tecnico - tecnicosDisponibles;
+
+  const estadoData = {
+    labels: ["Activos", "Deshabilitados"],
+    datasets: [
+      {
+        label: "Usuarios por Estado",
+        data: [usuariosPorEstado.activos, usuariosPorEstado.deshabilitados],
+        backgroundColor: ["rgba(34, 197, 94, 0.6)", "rgba(239, 68, 68, 0.6)"],
+        borderColor: ["rgba(34, 197, 94, 1)", "rgba(239, 68, 68, 1)"],
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const calificacionData = {
+    labels: Object.keys(tecnicosPorCalificacion),
+    datasets: [
+      {
+        label: "Técnicos por Calificación",
+        data: Object.values(tecnicosPorCalificacion),
+        backgroundColor: [
+          "rgba(107, 114, 128, 0.6)",
+          "rgba(249, 115, 22, 0.6)",
+          "rgba(245, 158, 11, 0.6)",
+          "rgba(34, 197, 94, 0.6)",
+          "rgba(16, 185, 129, 0.6)",
+        ],
+        borderColor: [
+          "rgba(107, 114, 128, 1)",
+          "rgba(249, 115, 22, 1)",
+          "rgba(245, 158, 11, 1)",
+          "rgba(34, 197, 94, 1)",
+          "rgba(16, 185, 129, 1)",
+        ],
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const disponibilidadData = {
+    labels: ["Disponibles", "No Disponibles"],
+    datasets: [
+      {
+        label: "Disponibilidad de Técnicos",
+        data: [tecnicosDisponibles, tecnicosNoDisponibles],
+        backgroundColor: ["rgba(34, 197, 94, 0.6)", "rgba(239, 68, 68, 0.6)"],
+        borderColor: ["rgba(34, 197, 94, 1)", "rgba(239, 68, 68, 1)"],
+        borderWidth: 1,
+      },
+    ],
+  };
+
   // ==================== SOLICITUDES ====================
 
   const datosSolicitudes = solicitudes.map((s) => [
@@ -1068,10 +1149,38 @@ export const ReportsBIPage = () => {
       {/* ==================== USUARIOS ==================== */}
       {usuarios.length > 0 && (
         <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-lg">
-          <h2 className="text-2xl font-bold mb-4">👥 Análisis de Usuarios</h2>
+          <h2 className="text-2xl font-bold mb-6">👥 Análisis de Usuarios</h2>
+
+          {/* Estadísticas */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-lg">
+              <p className="text-sm opacity-90">Total Usuarios</p>
+              <p className="text-3xl font-bold">{usuarios.length}</p>
+            </div>
+            <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-4 rounded-lg">
+              <p className="text-sm opacity-90">Usuarios Activos</p>
+              <p className="text-3xl font-bold">{usuariosPorEstado.activos}</p>
+            </div>
+            <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-4 rounded-lg">
+              <p className="text-sm opacity-90">Técnicos Disponibles</p>
+              <p className="text-3xl font-bold">{tecnicosDisponibles}</p>
+            </div>
+            <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white p-4 rounded-lg">
+              <p className="text-sm opacity-90">Técnicos con Calif.</p>
+              <p className="text-3xl font-bold">
+                {
+                  usuarios.filter(
+                    (u) =>
+                      u.rol === "tecnico" &&
+                      (u.Tecnico?.calificacion_promedio || 0) > 0
+                  ).length
+                }
+              </p>
+            </div>
+          </div>
 
           {/* Botones de exportación */}
-          <div className="flex gap-2 mb-4 flex-wrap">
+          <div className="flex gap-2 mb-6 flex-wrap">
             <button
               onClick={() =>
                 exportarPDFTablas("Reporte Usuarios", datosUsuarios, [
@@ -1122,33 +1231,146 @@ export const ReportsBIPage = () => {
             </button>
           </div>
 
-          {/* Gráfico */}
-          <div ref={contentRefUsuarios} className="bg-gray-50 p-4 rounded-lg">
-            <Pie data={chartUsuariosRol} />
+          {/* Gráficos */}
+          <div
+            ref={contentRefUsuarios}
+            className="bg-gray-50 dark:bg-slate-800 p-6 rounded-lg space-y-6"
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Usuarios por Rol */}
+              <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
+                  Usuarios por Rol
+                </h3>
+                <Pie data={chartUsuariosRol} options={{ responsive: true }} />
+              </div>
 
-            <div className="mt-6">
-              <h3 className="font-bold mb-2">Detalle de Usuarios</h3>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm border-collapse">
-                  <thead className="bg-gray-200">
+              {/* Usuarios por Estado */}
+              <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
+                  Usuarios por Estado
+                </h3>
+                <Pie data={estadoData} options={{ responsive: true }} />
+              </div>
+
+              {/* Técnicos por Calificación */}
+              <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
+                  Técnicos por Calificación
+                </h3>
+                <Bar data={calificacionData} options={{ responsive: true }} />
+              </div>
+
+              {/* Disponibilidad de Técnicos */}
+              <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
+                  Disponibilidad de Técnicos
+                </h3>
+                <Pie data={disponibilidadData} options={{ responsive: true }} />
+              </div>
+            </div>
+
+            {/* Resumen de Estadísticas */}
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
+                Resumen de Estadísticas
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+                <div>
+                  <p className="text-gray-600 dark:text-gray-400">Total</p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {usuarios.length}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-600 dark:text-gray-400">Admins</p>
+                  <p className="text-2xl font-bold text-red-600">
+                    {usuariosPorRol.admin}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-600 dark:text-gray-400">Técnicos</p>
+                  <p className="text-2xl font-bold text-indigo-600">
+                    {usuariosPorRol.tecnico}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-600 dark:text-gray-400">Clientes</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {usuariosPorRol.cliente}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-600 dark:text-gray-400">Activos</p>
+                  <p className="text-2xl font-bold text-emerald-600">
+                    {usuariosPorEstado.activos}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Tabla Detallada de Técnicos */}
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
+                Top Técnicos por Calificación
+              </h3>
+              <div className="overflow-x-auto rounded-lg shadow">
+                <table className="w-full text-sm">
+                  <thead className="bg-indigo-600 text-white sticky top-0">
                     <tr>
-                      <th className="border p-2">Nombre</th>
-                      <th className="border p-2">Email</th>
-                      <th className="border p-2">Rol</th>
-                      <th className="border p-2">Estado</th>
+                      <th className="px-4 py-3 text-left">Nombre</th>
+                      <th className="px-4 py-3 text-left">Calificación</th>
+                      <th className="px-4 py-3 text-left">Disponible</th>
+                      <th className="px-4 py-3 text-left">Estado</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {usuarios.slice(0, 10).map((u, i) => (
-                      <tr key={i} className="border">
-                        <td className="border p-2">{u.nombre}</td>
-                        <td className="border p-2">{u.email}</td>
-                        <td className="border p-2">{u.rol}</td>
-                        <td className="border p-2">
-                          {u.estado ? "Activo" : "Inactivo"}
-                        </td>
-                      </tr>
-                    ))}
+                  <tbody className="divide-y divide-gray-200 dark:divide-slate-700">
+                    {usuarios
+                      .filter((u) => u.rol === "tecnico")
+                      .sort(
+                        (a, b) =>
+                          (b.Tecnico?.calificacion_promedio || 0) -
+                          (a.Tecnico?.calificacion_promedio || 0)
+                      )
+                      .slice(0, 5)
+                      .map((u) => (
+                        <tr
+                          key={u.id_usuario}
+                          className="hover:bg-gray-50 dark:hover:bg-slate-800 transition"
+                        >
+                          <td className="px-4 py-3">
+                            {u.nombre} {u.apellido}
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="text-yellow-600 dark:text-yellow-400 font-bold">
+                              ⭐{" "}
+                              {(
+                                Number(u.Tecnico?.calificacion_promedio) || 0
+                              ).toFixed(1)}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            {u.Tecnico?.disponibilidad ? (
+                              <span className="text-green-600 dark:text-green-400 font-bold">
+                                Sí
+                              </span>
+                            ) : (
+                              <span className="text-red-600 dark:text-red-400 font-bold">
+                                No
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3">
+                            <span
+                              className={`px-2 py-1 rounded text-white text-xs font-bold ${
+                                u.estado ? "bg-green-600" : "bg-red-600"
+                              }`}
+                            >
+                              {u.estado ? "Activo" : "Deshabilitado"}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
                   </tbody>
                 </table>
               </div>
