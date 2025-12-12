@@ -77,6 +77,13 @@ export const ReportsBIPage = () => {
     cargarDatos();
   }, []);
 
+  // Recargar datos cuando cambian las fechas
+  useEffect(() => {
+    if (fechaDesde && fechaHasta) {
+      cargarDatos();
+    }
+  }, [fechaDesde, fechaHasta]);
+
   const cargarDatos = async () => {
     try {
       setLoading(true);
