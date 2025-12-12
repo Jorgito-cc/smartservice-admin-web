@@ -1,4 +1,10 @@
-import { FaTimes, FaCreditCard, FaQrcode, FaMoneyBillWave, FaMobileAlt } from "react-icons/fa";
+import {
+  FaTimes,
+  FaCreditCard,
+  FaQrcode,
+  FaMoneyBillWave,
+  FaMobileAlt,
+} from "react-icons/fa";
 
 interface PaymentDetailModalProps {
   payment: {
@@ -7,9 +13,12 @@ interface PaymentDetailModalProps {
     comision_empresa: number;
     monto_tecnico: number;
     estado: string;
-    metodo_pago?: "tarjeta" | "qr" | "efectivo" | "movil";
-    fecha_pago: string;
+    metodo_pago?: string;
+    fecha_pago: string | null;
     ServicioAsignado?: {
+      id_servicio?: number;
+      id_solicitud?: number;
+      id_tecnico?: number;
       SolicitudServicio?: {
         Cliente?: {
           Usuario?: {
@@ -19,8 +28,12 @@ interface PaymentDetailModalProps {
         };
       };
       Tecnico?: {
-        nombre: string;
-        apellido: string;
+        Usuario?: {
+          nombre: string;
+          apellido: string;
+          email: string;
+          foto?: string;
+        };
       };
     };
   };
@@ -61,8 +74,16 @@ export default function PaymentDetailModal({
     }
   };
 
-  const clienteNombre = `${payment.ServicioAsignado?.SolicitudServicio?.Cliente?.Usuario?.nombre || "N/A"} ${payment.ServicioAsignado?.SolicitudServicio?.Cliente?.Usuario?.apellido || ""}`;
-  const tecnicoNombre = `${payment.ServicioAsignado?.Tecnico?.nombre || "N/A"} ${payment.ServicioAsignado?.Tecnico?.apellido || ""}`;
+  const clienteNombre = `${
+    payment.ServicioAsignado?.SolicitudServicio?.Cliente?.Usuario?.nombre ||
+    "N/A"
+  } ${
+    payment.ServicioAsignado?.SolicitudServicio?.Cliente?.Usuario?.apellido ||
+    ""
+  }`;
+  const tecnicoNombre = `${
+    payment.ServicioAsignado?.Tecnico?.Usuario?.nombre || "N/A"
+  } ${payment.ServicioAsignado?.Tecnico?.Usuario?.apellido || ""}`;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
@@ -70,6 +91,7 @@ export default function PaymentDetailModal({
         {/* Cerrar */}
         <button
           onClick={onClose}
+          title="Cerrar modal"
           className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 text-lg"
         >
           <FaTimes />
@@ -96,7 +118,11 @@ export default function PaymentDetailModal({
           </div>
           <div className="flex justify-between">
             <span>Fecha:</span>
-            <span>{new Date(payment.fecha_pago).toLocaleDateString("es-BO")}</span>
+            <span>
+              {payment.fecha_pago
+                ? new Date(payment.fecha_pago).toLocaleDateString("es-BO")
+                : "N/A"}
+            </span>
           </div>
           <div className="flex justify-between">
             <span>Estado:</span>
@@ -104,11 +130,15 @@ export default function PaymentDetailModal({
           </div>
           <div className="flex justify-between">
             <span>Comisión del Sistema:</span>
-            <span>Bs. {parseFloat(payment.comision_empresa.toString()).toFixed(2)}</span>
+            <span>
+              Bs. {parseFloat(payment.comision_empresa.toString()).toFixed(2)}
+            </span>
           </div>
           <div className="flex justify-between">
             <span>Monto Técnico:</span>
-            <span>Bs. {parseFloat(payment.monto_tecnico.toString()).toFixed(2)}</span>
+            <span>
+              Bs. {parseFloat(payment.monto_tecnico.toString()).toFixed(2)}
+            </span>
           </div>
           <div className="flex justify-between">
             <span>Método de Pago:</span>

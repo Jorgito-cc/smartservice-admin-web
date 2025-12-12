@@ -17,9 +17,10 @@ import { PaymentsBI } from "./PaymentsBI";
 import { listarTodosPagos, type PagoServicio } from "../../../api/pago";
 
 type Pago = PagoServicio;
+type TabType = "list" | "bi";
 
 export const PaymentsListPage = () => {
-  const [activeTab, setActiveTab] = useState<"list" | "bi">("list");
+  const [activeTab, setActiveTab] = useState<TabType>("list");
   const [pagos, setPagos] = useState<Pago[]>([]);
   const [filteredPagos, setFilteredPagos] = useState<Pago[]>([]);
   const [selectedEstado, setSelectedEstado] = useState<string>("todos");
@@ -197,7 +198,7 @@ export const PaymentsListPage = () => {
         <button
           onClick={() => setActiveTab("list")}
           className={`px-6 py-3 font-semibold flex items-center gap-2 border-b-2 transition ${
-            activeTab === "list"
+            String(activeTab) === "list"
               ? "border-indigo-600 text-indigo-600"
               : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-800"
           }`}
@@ -207,7 +208,7 @@ export const PaymentsListPage = () => {
         <button
           onClick={() => setActiveTab("bi")}
           className={`px-6 py-3 font-semibold flex items-center gap-2 border-b-2 transition ${
-            activeTab === "bi"
+            String(activeTab) === "bi"
               ? "border-indigo-600 text-indigo-600"
               : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-800"
           }`}
@@ -378,7 +379,7 @@ export const PaymentsListPage = () => {
         {/* Modal */}
         {selectedPago && (
           <PaymentDetailModal
-            payment={selectedPago as unknown as any}
+            payment={selectedPago}
             onClose={() => setSelectedPago(null)}
           />
         )}
