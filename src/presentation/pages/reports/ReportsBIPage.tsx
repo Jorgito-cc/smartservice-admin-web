@@ -660,10 +660,37 @@ export const ReportsBIPage = () => {
       {/* ==================== BITÁCORA ==================== */}
       {bitacora.length > 0 && (
         <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-lg">
-          <h2 className="text-2xl font-bold mb-4">📋 Análisis de Bitácora</h2>
+          <h2 className="text-2xl font-bold mb-6">📋 Análisis de Bitácora</h2>
+
+          {/* Estadísticas de Bitácora */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-4 rounded-lg">
+              <p className="text-sm opacity-90">Total Acciones</p>
+              <p className="text-3xl font-bold">{bitacora.length}</p>
+            </div>
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-lg">
+              <p className="text-sm opacity-90">Creaciones</p>
+              <p className="text-3xl font-bold">
+                {bitacora.filter((l) => l.accion.startsWith("POST")).length}
+              </p>
+            </div>
+            <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white p-4 rounded-lg">
+              <p className="text-sm opacity-90">Actualizaciones</p>
+              <p className="text-3xl font-bold">
+                {bitacora.filter((l) => l.accion.startsWith("PUT")).length +
+                  bitacora.filter((l) => l.accion.startsWith("PATCH")).length}
+              </p>
+            </div>
+            <div className="bg-gradient-to-r from-red-500 to-red-600 text-white p-4 rounded-lg">
+              <p className="text-sm opacity-90">Eliminaciones</p>
+              <p className="text-3xl font-bold">
+                {bitacora.filter((l) => l.accion.startsWith("DELETE")).length}
+              </p>
+            </div>
+          </div>
 
           {/* Botones de exportación */}
-          <div className="flex gap-2 mb-4 flex-wrap">
+          <div className="flex gap-2 mb-6 flex-wrap">
             <button
               onClick={() =>
                 exportarPDFTablas("Reporte Bitácora", datosBitacora, [
@@ -712,34 +739,222 @@ export const ReportsBIPage = () => {
             </button>
           </div>
 
-          {/* Gráfico */}
-          <div ref={contentRefBitacora} className="bg-gray-50 p-4 rounded-lg">
-            <Bar
-              data={chartBitacora}
-              options={{
-                responsive: true,
-                plugins: { legend: { position: "top" } },
-              }}
-            />
+          {/* Gráficos */}
+          <div
+            ref={contentRefBitacora}
+            className="bg-gray-50 dark:bg-slate-800 p-6 rounded-lg space-y-6"
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Acciones por Tipo */}
+              <div className="bg-white dark:bg-slate-900 p-6 rounded-lg">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
+                  Acciones por Tipo
+                </h3>
+                <Bar
+                  data={{
+                    labels: ["POST", "PUT", "PATCH", "DELETE", "GET"],
+                    datasets: [
+                      {
+                        label: "Cantidad de Acciones",
+                        data: [
+                          bitacora.filter((l) => l.accion.startsWith("POST"))
+                            .length,
+                          bitacora.filter((l) => l.accion.startsWith("PUT"))
+                            .length,
+                          bitacora.filter((l) => l.accion.startsWith("PATCH"))
+                            .length,
+                          bitacora.filter((l) => l.accion.startsWith("DELETE"))
+                            .length,
+                          bitacora.filter((l) => l.accion.startsWith("GET"))
+                            .length,
+                        ],
+                        backgroundColor: [
+                          "rgba(34, 197, 94, 0.6)",
+                          "rgba(59, 130, 246, 0.6)",
+                          "rgba(249, 115, 22, 0.6)",
+                          "rgba(239, 68, 68, 0.6)",
+                          "rgba(168, 85, 247, 0.6)",
+                        ],
+                        borderColor: [
+                          "rgba(34, 197, 94, 1)",
+                          "rgba(59, 130, 246, 1)",
+                          "rgba(249, 115, 22, 1)",
+                          "rgba(239, 68, 68, 1)",
+                          "rgba(168, 85, 247, 1)",
+                        ],
+                        borderWidth: 1,
+                      },
+                    ],
+                  }}
+                  options={{ responsive: true }}
+                />
+              </div>
 
-            <div className="mt-6">
-              <h3 className="font-bold mb-2">Detalle de Acciones</h3>
-              <table className="w-full text-sm border-collapse">
-                <thead className="bg-gray-200">
-                  <tr>
-                    <th className="border p-2">Acción</th>
-                    <th className="border p-2">Cantidad</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {datosBitacoraAcciones.map((row, i) => (
-                    <tr key={i} className="border">
-                      <td className="border p-2">{row[0]}</td>
-                      <td className="border p-2">{row[1]}</td>
+              {/* Acciones por Recurso */}
+              <div className="bg-white dark:bg-slate-900 p-6 rounded-lg">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
+                  Acciones por Recurso
+                </h3>
+                <Pie
+                  data={{
+                    labels: Object.keys(
+                      bitacora.reduce((acc, log) => {
+                        const recursosMap: { [key: string]: string } = {
+                          "/api/solicitudes": "Solicitudes",
+                          "/api/categorias": "Categorías",
+                          "/api/usuarios": "Usuarios",
+                          "/api/servicios": "Servicios",
+                          "/api/pagos": "Pagos",
+                          "/api/calificaciones": "Calificaciones",
+                          "/api/ofertas": "Ofertas",
+                          "/api/chat": "Mensajes",
+                        };
+                        for (const [ruta, nombre] of Object.entries(
+                          recursosMap
+                        )) {
+                          if (log.accion.includes(ruta)) {
+                            acc[nombre] = (acc[nombre] || 0) + 1;
+                            break;
+                          }
+                        }
+                        return acc;
+                      }, {} as Record<string, number>)
+                    ),
+                    datasets: [
+                      {
+                        label: "Acciones por Recurso",
+                        data: Object.values(
+                          bitacora.reduce((acc, log) => {
+                            const recursosMap: { [key: string]: string } = {
+                              "/api/solicitudes": "Solicitudes",
+                              "/api/categorias": "Categorías",
+                              "/api/usuarios": "Usuarios",
+                              "/api/servicios": "Servicios",
+                              "/api/pagos": "Pagos",
+                              "/api/calificaciones": "Calificaciones",
+                              "/api/ofertas": "Ofertas",
+                              "/api/chat": "Mensajes",
+                            };
+                            for (const [ruta, nombre] of Object.entries(
+                              recursosMap
+                            )) {
+                              if (log.accion.includes(ruta)) {
+                                acc[nombre] = (acc[nombre] || 0) + 1;
+                                break;
+                              }
+                            }
+                            return acc;
+                          }, {} as Record<string, number>)
+                        ),
+                        backgroundColor: [
+                          "rgba(54, 162, 235, 0.6)",
+                          "rgba(75, 192, 192, 0.6)",
+                          "rgba(255, 206, 86, 0.6)",
+                          "rgba(153, 102, 255, 0.6)",
+                          "rgba(255, 159, 64, 0.6)",
+                          "rgba(201, 203, 207, 0.6)",
+                          "rgba(54, 162, 235, 0.8)",
+                          "rgba(75, 192, 192, 0.8)",
+                        ],
+                        borderColor: [
+                          "rgba(54, 162, 235, 1)",
+                          "rgba(75, 192, 192, 1)",
+                          "rgba(255, 206, 86, 1)",
+                          "rgba(153, 102, 255, 1)",
+                          "rgba(255, 159, 64, 1)",
+                          "rgba(201, 203, 207, 1)",
+                          "rgba(54, 162, 235, 1)",
+                          "rgba(75, 192, 192, 1)",
+                        ],
+                        borderWidth: 1,
+                      },
+                    ],
+                  }}
+                  options={{ responsive: true }}
+                />
+              </div>
+            </div>
+
+            {/* Resumen de Estadísticas */}
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
+                Resumen de Estadísticas
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    Acciones Crear (POST)
+                  </p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {bitacora.filter((l) => l.accion.startsWith("POST")).length}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    Acciones Actualizar
+                  </p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {bitacora.filter((l) => l.accion.startsWith("PUT")).length +
+                      bitacora.filter((l) => l.accion.startsWith("PATCH"))
+                        .length}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    Acciones Eliminar
+                  </p>
+                  <p className="text-2xl font-bold text-red-600">
+                    {
+                      bitacora.filter((l) => l.accion.startsWith("DELETE"))
+                        .length
+                    }
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    Acciones Consultar
+                  </p>
+                  <p className="text-2xl font-bold text-purple-600">
+                    {bitacora.filter((l) => l.accion.startsWith("GET")).length}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Tabla de Detalle */}
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
+                Detalle de Acciones
+              </h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm border-collapse">
+                  <thead className="bg-gray-200 dark:bg-slate-700">
+                    <tr>
+                      <th className="border p-2 text-left">Fecha</th>
+                      <th className="border p-2 text-left">Usuario</th>
+                      <th className="border p-2 text-left">Acción</th>
+                      <th className="border p-2 text-left">Detalles</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {bitacora.slice(0, 10).map((b, i) => (
+                      <tr
+                        key={i}
+                        className="border hover:bg-gray-100 dark:hover:bg-slate-700"
+                      >
+                        <td className="border p-2">
+                          {new Date(b.fecha).toLocaleString("es-BO")}
+                        </td>
+                        <td className="border p-2">
+                          {b.Usuario?.nombre || "Desconocido"}
+                        </td>
+                        <td className="border p-2">{b.accion}</td>
+                        <td className="border p-2">{b.detalles || "N/A"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
