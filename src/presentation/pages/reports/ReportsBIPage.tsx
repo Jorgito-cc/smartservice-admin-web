@@ -568,18 +568,154 @@ export const ReportsBIPage = () => {
     s.precio_ofrecido?.toString() || "N/A",
   ]);
 
-  const solicitudesPorEstado: Record<string, number> = {};
+  // Contar por estado para solicitudes
+  const statusMapSolicitudes: Record<string, string> = {
+    pendiente: "Pendiente",
+    con_ofertas: "Con Ofertas",
+    asignado: "Asignado",
+    en_proceso: "En Proceso",
+    completado: "Completado",
+    cancelado: "Cancelado",
+  };
+
+  const solicitudesPorEstadoConteo: Record<string, number> = {
+    pendiente: 0,
+    con_ofertas: 0,
+    asignado: 0,
+    en_proceso: 0,
+    completado: 0,
+    cancelado: 0,
+  };
+
   solicitudes.forEach((s) => {
-    solicitudesPorEstado[s.estado || "Sin estado"] =
-      (solicitudesPorEstado[s.estado || "Sin estado"] || 0) + 1;
+    if (s.estado && solicitudesPorEstadoConteo.hasOwnProperty(s.estado)) {
+      solicitudesPorEstadoConteo[
+        s.estado as keyof typeof solicitudesPorEstadoConteo
+      ]++;
+    }
   });
 
-  const chartSolicitudes = {
-    labels: Object.keys(solicitudesPorEstado),
+  // Contar por categoría
+  const solicitudesPorCategoria: { [key: string]: number } = {};
+  solicitudes.forEach((s) => {
+    const categoria = s.Categoria?.nombre || "Sin categoría";
+    solicitudesPorCategoria[categoria] =
+      (solicitudesPorCategoria[categoria] || 0) + 1;
+  });
+
+  // Solicitudes por fecha (últimos 7 días)
+  const solicitudesPorFecha: { [key: string]: number } = {};
+  const hoy = new Date();
+  for (let i = 6; i >= 0; i--) {
+    const fecha = new Date(hoy);
+    fecha.setDate(fecha.getDate() - i);
+    const fechaStr = fecha.toLocaleDateString("es-BO");
+    solicitudesPorFecha[fechaStr] = 0;
+  }
+
+  solicitudes.forEach((s) => {
+    const fechaStr = new Date(s.fecha_publicacion).toLocaleDateString("es-BO");
+    if (solicitudesPorFecha[fechaStr] !== undefined) {
+      solicitudesPorFecha[fechaStr]++;
+    }
+  });
+
+  // Calcular totales
+  const totalSolicitudes = solicitudes.length;
+  const solicitudesCompletadas = solicitudesPorEstadoConteo.completado;
+  const solicitudesPendientes = solicitudesPorEstadoConteo.pendiente;
+  const solicitudesCanceladas = solicitudesPorEstadoConteo.cancelado;
+  const porcentajeSolicitudesCompletado =
+    totalSolicitudes > 0
+      ? ((solicitudesCompletadas / totalSolicitudes) * 100).toFixed(1)
+      : 0;
+
+  // Gráfico por estado
+  const estadoSolicitudesData = {
+    labels: Object.keys(statusMapSolicitudes).map(
+      (k) => statusMapSolicitudes[k]
+    ),
     datasets: [
       {
         label: "Solicitudes por Estado",
-        data: Object.values(solicitudesPorEstado),
+        data: Object.keys(statusMapSolicitudes).map(
+          (k) =>
+            solicitudesPorEstadoConteo[
+              k as keyof typeof solicitudesPorEstadoConteo
+            ]
+        ),
+        backgroundColor: [
+          "rgba(245, 158, 11, 0.6)",
+          "rgba(59, 130, 246, 0.6)",
+          "rgba(99, 102, 241, 0.6)",
+          "rgba(168, 85, 247, 0.6)",
+          "rgba(34, 197, 94, 0.6)",
+          "rgba(239, 68, 68, 0.6)",
+        ],
+        borderColor: [
+          "rgba(245, 158, 11, 1)",
+          "rgba(59, 130, 246, 1)",
+          "rgba(99, 102, 241, 1)",
+          "rgba(168, 85, 247, 1)",
+          "rgba(34, 197, 94, 1)",
+          "rgba(239, 68, 68, 1)",
+        ],
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  // Gráfico por categoría
+  const categoriaSolicitudesData = {
+    labels: Object.keys(solicitudesPorCategoria).slice(0, 8),
+    datasets: [
+      {
+        label: "Top Categorías",
+        data: Object.values(solicitudesPorCategoria).slice(0, 8),
+        backgroundColor: "rgba(99, 102, 241, 0.6)",
+        borderColor: "rgba(99, 102, 241, 1)",
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  // Gráfico por fecha
+  const fechaSolicitudesData = {
+    labels: Object.keys(solicitudesPorFecha),
+    datasets: [
+      {
+        label: "Solicitudes por Día",
+        data: Object.values(solicitudesPorFecha),
+        borderColor: "rgb(99, 102, 241)",
+        backgroundColor: "rgba(99, 102, 241, 0.1)",
+        tension: 0.4,
+      },
+    ],
+  };
+
+  // Gráfico de tasa de finalización
+  const finalizacionSolicitudesData = {
+    labels: ["Completadas", "Pendientes"],
+    datasets: [
+      {
+        label: "Tasa de Finalización",
+        data: [
+          porcentajeSolicitudesCompletado,
+          100 - Number(porcentajeSolicitudesCompletado),
+        ],
+        backgroundColor: ["rgba(34, 197, 94, 0.6)", "rgba(209, 213, 219, 0.6)"],
+        borderColor: ["rgba(34, 197, 94, 1)", "rgba(209, 213, 219, 1)"],
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const chartSolicitudes = {
+    labels: Object.keys(solicitudesPorEstadoConteo),
+    datasets: [
+      {
+        label: "Solicitudes por Estado",
+        data: Object.values(solicitudesPorEstadoConteo),
         backgroundColor: [
           "rgba(245, 158, 11, 0.6)",
           "rgba(59, 130, 246, 0.6)",
@@ -1464,12 +1600,32 @@ export const ReportsBIPage = () => {
       {/* ==================== SOLICITUDES ==================== */}
       {solicitudes.length > 0 && (
         <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-lg">
-          <h2 className="text-2xl font-bold mb-4">
+          <h2 className="text-2xl font-bold mb-6">
             📝 Análisis de Solicitudes
           </h2>
 
+          {/* Estadísticas de Solicitudes */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-lg">
+              <p className="text-sm opacity-90">Total Solicitudes</p>
+              <p className="text-3xl font-bold">{totalSolicitudes}</p>
+            </div>
+            <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white p-4 rounded-lg">
+              <p className="text-sm opacity-90">Pendientes</p>
+              <p className="text-3xl font-bold">{solicitudesPendientes}</p>
+            </div>
+            <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-4 rounded-lg">
+              <p className="text-sm opacity-90">Completadas</p>
+              <p className="text-3xl font-bold">{solicitudesCompletadas}</p>
+            </div>
+            <div className="bg-gradient-to-r from-red-500 to-red-600 text-white p-4 rounded-lg">
+              <p className="text-sm opacity-90">Canceladas</p>
+              <p className="text-3xl font-bold">{solicitudesCanceladas}</p>
+            </div>
+          </div>
+
           {/* Botones de exportación */}
-          <div className="flex gap-2 mb-4 flex-wrap">
+          <div className="flex gap-2 mb-6 flex-wrap">
             <button
               onClick={() =>
                 exportarPDFTablas("Reporte Solicitudes", datosSolicitudes, [
@@ -1518,40 +1674,144 @@ export const ReportsBIPage = () => {
             </button>
           </div>
 
-          {/* Gráfico */}
+          {/* Gráficos */}
           <div
             ref={contentRefSolicitudes}
-            className="bg-gray-50 p-4 rounded-lg"
+            className="bg-gray-50 dark:bg-slate-800 p-6 rounded-lg space-y-6"
           >
-            <Doughnut data={chartSolicitudes} />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Solicitudes por Estado */}
+              <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow">
+                <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-100">
+                  Solicitudes por Estado
+                </h3>
+                <Pie
+                  data={estadoSolicitudesData}
+                  options={{ responsive: true, legend: { position: "top" } }}
+                />
+              </div>
 
-            <div className="mt-6">
-              <h3 className="font-bold mb-2">Detalle de Solicitudes</h3>
+              {/* Top Categorías */}
+              <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow">
+                <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-100">
+                  Top Categorías
+                </h3>
+                <Bar
+                  data={categoriaSolicitudesData}
+                  options={{ responsive: true, legend: { position: "top" } }}
+                />
+              </div>
+
+              {/* Solicitudes Últimos 7 Días */}
+              <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow lg:col-span-2">
+                <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-100">
+                  Solicitudes Últimos 7 Días
+                </h3>
+                <Line
+                  data={fechaSolicitudesData}
+                  options={{ responsive: true, legend: { position: "top" } }}
+                />
+              </div>
+
+              {/* Tasa de Finalización */}
+              <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow">
+                <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-100">
+                  Tasa de Finalización
+                </h3>
+                <Doughnut
+                  data={finalizacionSolicitudesData}
+                  options={{ responsive: true, legend: { position: "top" } }}
+                />
+              </div>
+            </div>
+
+            {/* Resumen de Estadísticas */}
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-100">
+                Resumen de Estadísticas
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-6 gap-4 text-sm">
+                <div>
+                  <p className="text-gray-600 dark:text-gray-400">Total</p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {totalSolicitudes}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-600 dark:text-gray-400">Pendiente</p>
+                  <p className="text-2xl font-bold text-yellow-600">
+                    {solicitudesPendientes}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    Con Ofertas
+                  </p>
+                  <p className="text-2xl font-bold text-indigo-600">
+                    {solicitudesPorEstadoConteo.con_ofertas}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-600 dark:text-gray-400">Asignado</p>
+                  <p className="text-2xl font-bold text-purple-600">
+                    {solicitudesPorEstadoConteo.asignado}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-600 dark:text-gray-400">En Proceso</p>
+                  <p className="text-2xl font-bold text-indigo-500">
+                    {solicitudesPorEstadoConteo.en_proceso}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-600 dark:text-gray-400">Completado</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {solicitudesCompletadas}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Tabla de Demanda por Categoría */}
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-100">
+                Demanda por Categoría
+              </h3>
               <div className="overflow-x-auto">
-                <table className="w-full text-sm border-collapse">
-                  <thead className="bg-gray-200">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-100 dark:bg-slate-700 border-b dark:border-slate-600">
                     <tr>
-                      <th className="border p-2">ID</th>
-                      <th className="border p-2">Categoría</th>
-                      <th className="border p-2">Estado</th>
-                      <th className="border p-2">Fecha</th>
+                      <th className="p-3 text-left text-gray-800 dark:text-gray-100 font-semibold">
+                        Categoría
+                      </th>
+                      <th className="p-3 text-center text-gray-800 dark:text-gray-100 font-semibold">
+                        Cantidad
+                      </th>
+                      <th className="p-3 text-right text-gray-800 dark:text-gray-100 font-semibold">
+                        Porcentaje
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {solicitudes.slice(0, 10).map((s) => (
-                      <tr key={s.id_solicitud} className="border">
-                        <td className="border p-2">{s.id_solicitud}</td>
-                        <td className="border p-2">
-                          {s.Categoria?.nombre || "N/A"}
-                        </td>
-                        <td className="border p-2">{s.estado}</td>
-                        <td className="border p-2">
-                          {new Date(s.fecha_publicacion).toLocaleDateString(
-                            "es-BO"
-                          )}
-                        </td>
-                      </tr>
-                    ))}
+                    {Object.entries(solicitudesPorCategoria)
+                      .sort(([, a], [, b]) => b - a)
+                      .slice(0, 10)
+                      .map(([categoria, cantidad]) => (
+                        <tr
+                          key={categoria}
+                          className="border-b dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800 transition"
+                        >
+                          <td className="p-3 text-gray-700 dark:text-gray-300">
+                            {categoria}
+                          </td>
+                          <td className="p-3 text-center font-bold text-gray-900 dark:text-white">
+                            {cantidad}
+                          </td>
+                          <td className="p-3 text-right text-gray-600 dark:text-gray-400">
+                            {((cantidad / totalSolicitudes) * 100).toFixed(1)}%
+                          </td>
+                        </tr>
+                      ))}
                   </tbody>
                 </table>
               </div>
