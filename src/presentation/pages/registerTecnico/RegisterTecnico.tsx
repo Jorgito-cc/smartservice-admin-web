@@ -98,6 +98,12 @@ export const RegisterTecnico = () => {
       return;
     }
 
+    const calificacion = Number(form.calificacion_promedio);
+    if (isNaN(calificacion) || calificacion < 0 || calificacion > 5) {
+      alert("Calificación debe estar entre 0 y 5");
+      return;
+    }
+
     try {
       let fotoUrl = "";
       let fotoCiUrl = "";
@@ -121,29 +127,48 @@ export const RegisterTecnico = () => {
       }
 
       const payload = {
-        nombre: form.nombre,
-        apellido: form.apellido,
-        email: form.email,
-        password: form.password,
-        telefono: form.telefono,
-        descripcion: form.descripcion,
-        ci: form.ci,
-        foto: fotoUrl,
-        foto_ci: fotoCiUrl,
+        nombre: form.nombre.trim(),
+        apellido: form.apellido.trim(),
+        email: form.email.trim(),
+        password: form.password.trim(),
+        telefono: form.telefono.trim() || null,
+        descripcion: form.descripcion.trim(),
+        ci: form.ci.trim(),
+        foto: fotoUrl || null,
+        foto_ci: fotoCiUrl || null,
         rol: "tecnico" as const,
-        calificacion_promedio: Number(form.calificacion_promedio),
+        calificacion_promedio: calificacion,
         especialidades: especialidadesValidas.map((e) => ({
-          nombre: e.nombre,
-          referencias: e.referencias,
-          anio_experiencia: Number(e.anio_experiencia),
+          nombre: e.nombre.trim(),
+          referencias: e.referencias.trim() || null,
+          anio_experiencia: Number(e.anio_experiencia) || 0,
         })),
       };
 
+      console.log("Enviando payload:", JSON.stringify(payload, null, 2));
+
       const res = await registerTecnicoRequest(payload);
       alert("Técnico registrado correctamente\n" + res.msg);
-    } catch (err) {
-      console.error(err);
-      alert("Error registrando técnico");
+      // Limpiar formulario tras éxito
+      setForm({
+        nombre: "",
+        apellido: "",
+        email: "",
+        password: "",
+        telefono: "",
+        descripcion: "",
+        ci: "",
+        calificacion_promedio: 0,
+        foto: null,
+        foto_ci: null,
+        rol: "tecnico",
+        especialidades: [{ nombre: "", referencias: "", anio_experiencia: 0 }],
+      });
+    } catch (err: any) {
+      console.error("Error completo:", err);
+      const mensajeError =
+        err?.response?.data?.error || err?.message || "Error desconocido";
+      alert("Error registrando técnico:\n" + mensajeError);
     }
   };
 
