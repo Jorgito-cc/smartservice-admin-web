@@ -97,9 +97,13 @@ export const getKPIs = async (): Promise<KPIs> => {
 };
 
 // Servicios por categoría
-export const getServiciosPorCategoria = async (): Promise<ServicioPorCategoria[]> => {
+export const getServiciosPorCategoria = async (): Promise<
+  ServicioPorCategoria[]
+> => {
   try {
-    const { data } = await api.get<ServicioPorCategoria[]>("/reportes/servicios-por-categoria");
+    const { data } = await api.get<ServicioPorCategoria[]>(
+      "/reportes/servicios-por-categoria"
+    );
     return data || [];
   } catch (error) {
     console.error("Error obteniendo servicios por categoría:", error);
@@ -127,15 +131,19 @@ export const getTecnicosTop = async (): Promise<TecnicoTop[]> => {
     console.error("Error obteniendo técnicos top:", error);
     // Fallback: intentar con endpoint alternativo
     try {
-      const { data: dashData } = await api.get<DashboardStats>("/reportes/dashboard");
-      return dashData?.topTecnicos?.map((t) => ({
-        id_tecnico: t.id_tecnico,
-        nombre: t.nombre,
-        apellido: t.apellido,
-        foto: t.foto,
-        total_servicios: t.total_servicios,
-        calificacion: 0,
-      })) || [];
+      const { data: dashData } = await api.get<DashboardStats>(
+        "/reportes/dashboard"
+      );
+      return (
+        dashData?.topTecnicos?.map((t) => ({
+          id_tecnico: t.id_tecnico,
+          nombre: t.nombre,
+          apellido: t.apellido,
+          foto: t.foto,
+          total_servicios: t.total_servicios,
+          calificacion: 0,
+        })) || []
+      );
     } catch (fallbackError) {
       console.error("Error en fallback de técnicos top:", fallbackError);
       return [];
@@ -217,3 +225,49 @@ export const getTecnicosDestacados = async (): Promise<{
   }
 };
 
+// Interpretación Inteligente del Negocio
+export const getInterpretacionInteligente = async (
+  desde?: string,
+  hasta?: string
+) => {
+  try {
+    const params = new URLSearchParams();
+    if (desde) params.append("desde", desde);
+    if (hasta) params.append("hasta", hasta);
+
+    const { data } = await api.get("/analisis/interpretacion-inteligente", {
+      params,
+    });
+    return data;
+  } catch (error) {
+    console.error("Error obteniendo interpretación:", error);
+    return {
+      interpretacion: "No se pudo generar la interpretación. Intenta de nuevo.",
+      datos: null,
+    };
+  }
+};
+
+// Aconsejador Inteligente
+export const getAconsejadorInteligente = async (
+  desde?: string,
+  hasta?: string
+) => {
+  try {
+    const params = new URLSearchParams();
+    if (desde) params.append("desde", desde);
+    if (hasta) params.append("hasta", hasta);
+
+    const { data } = await api.get("/analisis/aconsejador-inteligente", {
+      params,
+    });
+    return data;
+  } catch (error) {
+    console.error("Error obteniendo recomendaciones:", error);
+    return {
+      recomendaciones:
+        "No se pudieron generar las recomendaciones. Intenta de nuevo.",
+      datos: null,
+    };
+  }
+};

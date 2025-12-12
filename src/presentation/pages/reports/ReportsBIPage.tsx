@@ -12,18 +12,26 @@ import {
   PointElement,
 } from "chart.js";
 import { Bar, Pie, Line } from "react-chartjs-2";
-import { FaSpinner, FaFilePdf, FaChartBar, FaChartPie, FaChartLine } from "react-icons/fa";
+import {
+  FaSpinner,
+  FaFilePdf,
+  FaChartBar,
+  FaChartPie,
+  FaChartLine,
+} from "react-icons/fa";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { 
-  getKPIs, 
-  getServiciosPorCategoria, 
-  getIngresosPorPeriodo, 
+import {
+  getKPIs,
+  getServiciosPorCategoria,
+  getIngresosPorPeriodo,
   getTecnicosTop,
+  getInterpretacionInteligente,
+  getAconsejadorInteligente,
   type KPIs,
   type ServicioPorCategoria,
   type Ingreso,
-  type TecnicoTop
+  type TecnicoTop,
 } from "../../../api/reportes";
 
 // Registrar componentes de Chart.js
@@ -41,13 +49,21 @@ ChartJS.register(
 
 export const ReportsBIPage = () => {
   const [kpis, setKpis] = useState<KPIs | null>(null);
-  const [serviciosPorCategoria, setServiciosPorCategoria] = useState<ServicioPorCategoria[]>([]);
+  const [serviciosPorCategoria, setServiciosPorCategoria] = useState<
+    ServicioPorCategoria[]
+  >([]);
   const [ingresos, setIngresos] = useState<Ingreso[]>([]);
   const [tecnicosTop, setTecnicosTop] = useState<TecnicoTop[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
+
+  // Nuevos estados para análisis inteligente
+  const [interpretacion, setInterpretacion] = useState<string | null>(null);
+  const [recomendaciones, setRecomendaciones] = useState<string | null>(null);
+  const [loadingInterpretacion, setLoadingInterpretacion] = useState(false);
+  const [loadingRecomendaciones, setLoadingRecomendaciones] = useState(false);
 
   useEffect(() => {
     // Establecer fechas por defecto (último mes)
@@ -65,12 +81,13 @@ export const ReportsBIPage = () => {
     try {
       setLoading(true);
       setError(null);
-      const [kpisRes, categoriasRes, ingresosRes, tecnicosRes] = await Promise.all([
-        getKPIs(),
-        getServiciosPorCategoria(),
-        getIngresosPorPeriodo(),
-        getTecnicosTop(),
-      ]);
+      const [kpisRes, categoriasRes, ingresosRes, tecnicosRes] =
+        await Promise.all([
+          getKPIs(),
+          getServiciosPorCategoria(),
+          getIngresosPorPeriodo(),
+          getTecnicosTop(),
+        ]);
 
       setKpis(kpisRes);
       setServiciosPorCategoria(categoriasRes);
@@ -81,6 +98,41 @@ export const ReportsBIPage = () => {
       setError("Error al cargar los reportes. Por favor, intenta de nuevo.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Generar Interpretación Inteligente
+  const generarInterpretacion = async () => {
+    try {
+      setLoadingInterpretacion(true);
+      const resultado = await getInterpretacionInteligente(
+        fechaDesde,
+        fechaHasta
+      );
+      setInterpretacion(resultado.interpretacion);
+    } catch (error) {
+      console.error("Error generando interpretación:", error);
+      setInterpretacion(
+        "Error al generar la interpretación. Intenta de nuevo."
+      );
+    } finally {
+      setLoadingInterpretacion(false);
+    }
+  };
+
+  // Generar Recomendaciones
+  const generarRecomendaciones = async () => {
+    try {
+      setLoadingRecomendaciones(true);
+      const resultado = await getAconsejadorInteligente(fechaDesde, fechaHasta);
+      setRecomendaciones(resultado.recomendaciones);
+    } catch (error) {
+      console.error("Error generando recomendaciones:", error);
+      setRecomendaciones(
+        "Error al generar las recomendaciones. Intenta de nuevo."
+      );
+    } finally {
+      setLoadingRecomendaciones(false);
     }
   };
 
@@ -124,7 +176,10 @@ export const ReportsBIPage = () => {
     doc.setFontSize(14);
     doc.text("Servicios por Categoría", 14, 22);
 
-    const categoriaData = serviciosPorCategoria.map((c) => [c.categoria, c.total.toString()]);
+    const categoriaData = serviciosPorCategoria.map((c) => [
+      c.categoria,
+      c.total.toString(),
+    ]);
 
     autoTable(doc, {
       startY: 28,
@@ -291,17 +346,22 @@ export const ReportsBIPage = () => {
             <p className="text-sm opacity-90">Total Servicios</p>
             <p className="text-4xl font-bold">{kpis.total_servicios}</p>
             <p className="text-xs mt-2">
-              {kpis.servicios_completados} completados ({kpis.tasa_completacion}%)
+              {kpis.servicios_completados} completados ({kpis.tasa_completacion}
+              %)
             </p>
           </div>
           <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-6 rounded-lg shadow-lg">
             <p className="text-sm opacity-90">Ingresos Totales</p>
-            <p className="text-4xl font-bold">Bs. {parseFloat(kpis.total_ingresos).toFixed(2)}</p>
+            <p className="text-4xl font-bold">
+              Bs. {parseFloat(kpis.total_ingresos).toFixed(2)}
+            </p>
             <p className="text-xs mt-2">Período seleccionado</p>
           </div>
           <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-6 rounded-lg shadow-lg">
             <p className="text-sm opacity-90">Usuarios</p>
-            <p className="text-4xl font-bold">{kpis.total_clientes + kpis.total_tecnicos}</p>
+            <p className="text-4xl font-bold">
+              {kpis.total_clientes + kpis.total_tecnicos}
+            </p>
             <p className="text-xs mt-2">
               {kpis.total_clientes} clientes, {kpis.total_tecnicos} técnicos
             </p>
@@ -425,10 +485,14 @@ export const ReportsBIPage = () => {
                     <div className="flex items-center gap-2">
                       <div className="flex text-yellow-500">
                         {[...Array(5)].map((_, i) => (
-                          <span key={i}>{i < Math.floor(tecnico.calificacion) ? "★" : "☆"}</span>
+                          <span key={i}>
+                            {i < Math.floor(tecnico.calificacion) ? "★" : "☆"}
+                          </span>
                         ))}
                       </div>
-                      <span className="text-gray-600">{tecnico.calificacion.toFixed(1)}</span>
+                      <span className="text-gray-600">
+                        {tecnico.calificacion.toFixed(1)}
+                      </span>
                     </div>
                   </td>
                 </tr>
@@ -436,6 +500,83 @@ export const ReportsBIPage = () => {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* ============================================ */}
+      {/* 🧠 SECCIÓN DE ANÁLISIS INTELIGENTE */}
+      {/* ============================================ */}
+
+      <div className="mt-10 pt-10 border-t-2 border-gray-300 dark:border-slate-700">
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-3">
+          🧠 Análisis Inteligente del Negocio
+        </h2>
+
+        {/* Botones de Análisis */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <button
+            onClick={generarInterpretacion}
+            disabled={loadingInterpretacion}
+            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition font-semibold shadow-md"
+          >
+            {loadingInterpretacion ? (
+              <>
+                <FaSpinner className="animate-spin" /> Generando...
+              </>
+            ) : (
+              <>💡 Generar Interpretación Inteligente</>
+            )}
+          </button>
+
+          <button
+            onClick={generarRecomendaciones}
+            disabled={loadingRecomendaciones}
+            className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition font-semibold shadow-md"
+          >
+            {loadingRecomendaciones ? (
+              <>
+                <FaSpinner className="animate-spin" /> Generando...
+              </>
+            ) : (
+              <>🎯 Generar Recomendaciones</>
+            )}
+          </button>
+        </div>
+
+        {/* Sección 1: Interpretación Inteligente */}
+        {interpretacion && (
+          <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-slate-800 dark:to-slate-700 p-6 rounded-lg shadow-lg mb-6 border-l-4 border-blue-600">
+            <h3 className="text-xl font-bold text-blue-900 dark:text-blue-200 mb-4 flex items-center gap-2">
+              📊 Interpretación Inteligente del Negocio
+            </h3>
+            <p className="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap text-sm md:text-base">
+              {interpretacion}
+            </p>
+          </div>
+        )}
+
+        {/* Sección 2: Aconsejador Inteligente */}
+        {recomendaciones && (
+          <div className="bg-gradient-to-r from-purple-50 to-purple-100 dark:from-slate-800 dark:to-slate-700 p-6 rounded-lg shadow-lg border-l-4 border-purple-600">
+            <h3 className="text-xl font-bold text-purple-900 dark:text-purple-200 mb-4 flex items-center gap-2">
+              🎯 Aconsejador Inteligente - Recomendaciones
+            </h3>
+            <div className="text-gray-700 dark:text-gray-300 text-sm md:text-base">
+              <div className="whitespace-pre-wrap leading-relaxed">
+                {recomendaciones}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Mensaje si no hay análisis */}
+        {!interpretacion && !recomendaciones && (
+          <div className="bg-yellow-50 dark:bg-slate-800 border-l-4 border-yellow-400 p-6 rounded-lg">
+            <p className="text-gray-700 dark:text-gray-300 flex items-center gap-2">
+              💡 Usa los botones arriba para generar análisis automáticos
+              basados en IA
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
