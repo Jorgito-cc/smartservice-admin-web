@@ -1687,7 +1687,10 @@ export const ReportsBIPage = () => {
                 </h3>
                 <Pie
                   data={estadoSolicitudesData}
-                  options={{ responsive: true, legend: { position: "top" } }}
+                  options={{
+                    responsive: true,
+                    plugins: { legend: { position: "top" as const } },
+                  }}
                 />
               </div>
 
@@ -1698,7 +1701,10 @@ export const ReportsBIPage = () => {
                 </h3>
                 <Bar
                   data={categoriaSolicitudesData}
-                  options={{ responsive: true, legend: { position: "top" } }}
+                  options={{
+                    responsive: true,
+                    plugins: { legend: { position: "top" as const } },
+                  }}
                 />
               </div>
 
@@ -1709,7 +1715,10 @@ export const ReportsBIPage = () => {
                 </h3>
                 <Line
                   data={fechaSolicitudesData}
-                  options={{ responsive: true, legend: { position: "top" } }}
+                  options={{
+                    responsive: true,
+                    plugins: { legend: { position: "top" as const } },
+                  }}
                 />
               </div>
 
@@ -1720,7 +1729,10 @@ export const ReportsBIPage = () => {
                 </h3>
                 <Doughnut
                   data={finalizacionSolicitudesData}
-                  options={{ responsive: true, legend: { position: "top" } }}
+                  options={{
+                    responsive: true,
+                    plugins: { legend: { position: "top" as const } },
+                  }}
                 />
               </div>
             </div>
