@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { getAuditoriaLogs } from "../../../api/auditoria";
 import type { AuditoriaLog } from "../../../types/auditoriaLogType";
 import { FaExpand } from "react-icons/fa";
+import { BitacoraAnalisis } from "./BitacoraAnalisis";
 
 // Función para formatear la acción
 const formatearAccion = (accion: string): string => {
@@ -162,6 +163,7 @@ export const Bitacora = () => {
   const [logs, setLogs] = useState<AuditoriaLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDetalles, setSelectedDetalles] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"lista" | "analisis">("lista");
 
   const loadLogs = async () => {
     try {
@@ -187,83 +189,116 @@ export const Bitacora = () => {
         📘 Bitácora del Sistema
       </h1>
 
-      <div className="overflow-x-auto rounded-lg shadow">
-        <table className="w-full border-collapse">
-          <thead className="bg-indigo-600 text-white sticky top-0">
-            <tr>
-              <th className="px-4 py-3 text-left text-sm font-semibold">
-                Fecha
-              </th>
-              <th className="px-4 py-3 text-left text-sm font-semibold">
-                Usuario
-              </th>
-              <th className="px-4 py-3 text-left text-sm font-semibold">Rol</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold">
-                Acción
-              </th>
-              <th className="px-4 py-3 text-left text-sm font-semibold">
-                Resumen
-              </th>
-              <th className="px-4 py-3 text-center text-sm font-semibold">
-                Ver Detalles
-              </th>
-            </tr>
-          </thead>
-
-          <tbody className="divide-y divide-gray-200 dark:divide-slate-700">
-            {logs.map((log) => (
-              <tr
-                key={log.id_log}
-                className="hover:bg-gray-50 dark:hover:bg-slate-800 transition"
-              >
-                <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                  {new Date(log.fecha).toLocaleString("es-BO")}
-                </td>
-
-                <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
-                  {log.Usuario?.nombre} {log.Usuario?.apellido}
-                </td>
-
-                <td className="px-4 py-3 text-sm">
-                  <span className="px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                    {log.Usuario?.rol}
-                  </span>
-                </td>
-
-                <td className="px-4 py-3 text-sm font-medium text-gray-800 dark:text-gray-200">
-                  {formatearAccion(log.accion)}
-                </td>
-
-                <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 max-w-xs truncate">
-                  {formatearDetalles(log.detalles)}
-                </td>
-
-                <td className="px-4 py-3 text-center">
-                  <button
-                    onClick={() => setSelectedDetalles(log.detalles)}
-                    className="inline-flex items-center gap-2 px-3 py-1 text-xs bg-indigo-600 hover:bg-indigo-700 text-white rounded transition"
-                    title="Ver detalles completos"
-                  >
-                    <FaExpand /> Ver
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* Tabs */}
+      <div className="flex gap-4 mb-6 border-b border-gray-300 dark:border-slate-700">
+        <button
+          onClick={() => setActiveTab("lista")}
+          className={`px-4 py-2 font-semibold transition ${
+            String(activeTab) === "lista"
+              ? "text-indigo-600 border-b-2 border-indigo-600"
+              : "text-gray-600 dark:text-gray-400 hover:text-gray-800"
+          }`}
+        >
+          📋 Bitácora
+        </button>
+        <button
+          onClick={() => setActiveTab("analisis")}
+          className={`px-4 py-2 font-semibold transition ${
+            String(activeTab) === "analisis"
+              ? "text-indigo-600 border-b-2 border-indigo-600"
+              : "text-gray-600 dark:text-gray-400 hover:text-gray-800"
+          }`}
+        >
+          📊 Bitácora Análisis
+        </button>
       </div>
 
-      {logs.length === 0 && (
-        <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-          No hay registros de auditoría disponibles
-        </div>
-      )}
+      {/* Contenido de Tabs */}
+      {String(activeTab) === "lista" ? (
+        <>
+          <div className="overflow-x-auto rounded-lg shadow">
+            <table className="w-full border-collapse">
+              <thead className="bg-indigo-600 text-white sticky top-0">
+                <tr>
+                  <th className="px-4 py-3 text-left text-sm font-semibold">
+                    Fecha
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold">
+                    Usuario
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold">
+                    Rol
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold">
+                    Acción
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold">
+                    Resumen
+                  </th>
+                  <th className="px-4 py-3 text-center text-sm font-semibold">
+                    Ver Detalles
+                  </th>
+                </tr>
+              </thead>
 
-      {selectedDetalles && (
-        <DetallesModal
-          detalles={selectedDetalles}
-          onClose={() => setSelectedDetalles(null)}
-        />
+              <tbody className="divide-y divide-gray-200 dark:divide-slate-700">
+                {logs.map((log) => (
+                  <tr
+                    key={log.id_log}
+                    className="hover:bg-gray-50 dark:hover:bg-slate-800 transition"
+                  >
+                    <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                      {new Date(log.fecha).toLocaleString("es-BO")}
+                    </td>
+
+                    <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+                      {log.Usuario?.nombre} {log.Usuario?.apellido}
+                    </td>
+
+                    <td className="px-4 py-3 text-sm">
+                      <span className="px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                        {log.Usuario?.rol}
+                      </span>
+                    </td>
+
+                    <td className="px-4 py-3 text-sm font-medium text-gray-800 dark:text-gray-200">
+                      {formatearAccion(log.accion)}
+                    </td>
+
+                    <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 max-w-xs truncate">
+                      {formatearDetalles(log.detalles)}
+                    </td>
+
+                    <td className="px-4 py-3 text-center">
+                      <button
+                        onClick={() => setSelectedDetalles(log.detalles)}
+                        className="inline-flex items-center gap-2 px-3 py-1 text-xs bg-indigo-600 hover:bg-indigo-700 text-white rounded transition"
+                        title="Ver detalles completos"
+                      >
+                        <FaExpand /> Ver
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {logs.length === 0 && (
+            <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+              No hay registros de auditoría disponibles
+            </div>
+          )}
+
+          {selectedDetalles && (
+            <DetallesModal
+              detalles={selectedDetalles}
+              onClose={() => setSelectedDetalles(null)}
+            />
+          )}
+        </>
+      ) : (
+        <BitacoraAnalisis />
       )}
     </div>
   );
