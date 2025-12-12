@@ -11,15 +11,23 @@ import {
   LineElement,
   PointElement,
 } from "chart.js";
-import { Bar, Pie, Doughnut } from "react-chartjs-2";
+import { Bar, Pie, Doughnut, Line } from "react-chartjs-2";
 import { FaSpinner, FaFilePdf, FaFileExcel } from "react-icons/fa";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import html2canvas from "html2canvas";
 import * as XLSX from "xlsx";
 import {
+  getKPIs,
+  getServiciosPorCategoria,
+  getIngresosPorPeriodo,
+  getTecnicosTop,
   getInterpretacionInteligente,
   getAconsejadorInteligente,
+  type KPIs,
+  type ServicioPorCategoria,
+  type Ingreso,
+  type TecnicoTop,
 } from "../../../api/reportes";
 import { getAllUsuariosRequest } from "../../../api/usuarios";
 import {
@@ -49,6 +57,14 @@ export const ReportsBIPage = () => {
   const [loading, setLoading] = useState(true);
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
+
+  // Estados para KPIs
+  const [kpis, setKpis] = useState<KPIs | null>(null);
+  const [serviciosPorCategoria, setServiciosPorCategoria] = useState<
+    ServicioPorCategoria[]
+  >([]);
+  const [ingresos, setIngresos] = useState<Ingreso[]>([]);
+  const [tecnicosTop, setTecnicosTop] = useState<TecnicoTop[]>([]);
 
   // Estados para nuevas secciones
   const [bitacora, setBitacora] = useState<AuditoriaLog[]>([]);
@@ -99,12 +115,20 @@ export const ReportsBIPage = () => {
       setLoading(true);
 
       const [
+        kpisRes,
+        categoriasRes,
+        ingresosRes,
+        tecnicosRes,
         bitacoraRes,
         usuariosRes,
         solicitudesRes,
         pagosRes,
         categoriasListRes,
       ] = await Promise.all([
+        getKPIs(),
+        getServiciosPorCategoria(),
+        getIngresosPorPeriodo(),
+        getTecnicosTop(),
         getAuditoriaLogs(),
         getAllUsuariosRequest(),
         listarTodasSolicitudes(),
@@ -112,6 +136,10 @@ export const ReportsBIPage = () => {
         getCategoriasRequest(),
       ]);
 
+      setKpis(kpisRes);
+      setServiciosPorCategoria(categoriasRes);
+      setIngresos(ingresosRes);
+      setTecnicosTop(tecnicosRes);
       setBitacora(Array.isArray(bitacoraRes) ? bitacoraRes : []);
       setUsuarios(Array.isArray(usuariosRes) ? usuariosRes : []);
       setSolicitudes(Array.isArray(solicitudesRes) ? solicitudesRes : []);
@@ -236,6 +264,67 @@ export const ReportsBIPage = () => {
     } finally {
       setExporting(false);
     }
+  };
+
+  // ==================== KPIs Y DASHBOARD PRINCIPAL ====================
+
+  const totalServicios = kpis?.total_servicios || 0;
+  const serviciosCompletados = kpis?.servicios_completados || 0;
+  const porcentajeCompletado =
+    totalServicios > 0
+      ? ((serviciosCompletados / totalServicios) * 100).toFixed(2)
+      : 0;
+
+  const totalIngresos = ingresos.reduce((sum, i) => sum + (i.total || 0), 0);
+  const comisionEmpresa = ingresos.reduce(
+    (sum, i) => sum + (i.comision || 0),
+    0
+  );
+  const totalPagado = pagos
+    .filter((p) => p.estado === "pagado")
+    .reduce((sum, p) => sum + (p.monto_total || 0), 0);
+  const totalPendiente = pagos
+    .filter((p) => p.estado === "pendiente")
+    .reduce((sum, p) => sum + (p.monto_total || 0), 0);
+
+  // Gráfica de ingresos en el tiempo
+  const ingresosAgrupados: Record<string, { total: number; comision: number }> =
+    {};
+  ingresos.forEach((i) => {
+    const fecha = i.fecha
+      ? new Date(i.fecha).toLocaleDateString("es-BO")
+      : "Sin fecha";
+    if (!ingresosAgrupados[fecha]) {
+      ingresosAgrupados[fecha] = { total: 0, comision: 0 };
+    }
+    ingresosAgrupados[fecha].total += i.total || 0;
+    ingresosAgrupados[fecha].comision += i.comision || 0;
+  });
+
+  const chartIngresos = {
+    labels: Object.keys(ingresosAgrupados).sort(),
+    datasets: [
+      {
+        label: "Ingresos Totales",
+        data: Object.keys(ingresosAgrupados)
+          .sort()
+          .map((f) => ingresosAgrupados[f].total),
+        borderColor: "rgba(34, 197, 94, 1)",
+        backgroundColor: "rgba(34, 197, 94, 0.1)",
+        borderWidth: 2,
+        tension: 0.4,
+      },
+      {
+        label: "Comisión Empresa",
+        data: Object.keys(ingresosAgrupados)
+          .sort()
+          .map((f) => ingresosAgrupados[f].comision),
+        borderColor: "rgba(239, 68, 68, 1)",
+        backgroundColor: "rgba(239, 68, 68, 0.1)",
+        borderWidth: 2,
+        tension: 0.4,
+      },
+    ],
   };
 
   // ==================== BITÁCORA ====================
@@ -457,6 +546,110 @@ export const ReportsBIPage = () => {
           Aplicar
         </button>
       </div>
+
+      {/* ==================== KPIS PRINCIPALES ==================== */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-blue-600 text-white p-6 rounded-lg shadow-lg">
+          <div className="text-sm opacity-90">Total Servicios</div>
+          <div className="text-3xl font-bold">{totalServicios}</div>
+          <div className="text-xs opacity-75 mt-1">
+            {serviciosCompletados} completados ({porcentajeCompletado}%)
+          </div>
+        </div>
+
+        <div className="bg-green-600 text-white p-6 rounded-lg shadow-lg">
+          <div className="text-sm opacity-90">Ingresos Totales</div>
+          <div className="text-3xl font-bold">
+            Bs. {totalIngresos.toFixed(2)}
+          </div>
+          <div className="text-xs opacity-75 mt-1">Período seleccionado</div>
+        </div>
+
+        <div className="bg-purple-600 text-white p-6 rounded-lg shadow-lg">
+          <div className="text-sm opacity-90">Usuarios</div>
+          <div className="text-3xl font-bold">{usuarios.length}</div>
+          <div className="text-xs opacity-75 mt-1">
+            {usuarios.filter((u) => u.rol === "cliente").length} clientes,{" "}
+            {usuarios.filter((u) => u.rol === "tecnico").length} técnicos
+          </div>
+        </div>
+
+        <div className="bg-indigo-600 text-white p-6 rounded-lg shadow-lg">
+          <div className="text-sm opacity-90">Comisión Empresa</div>
+          <div className="text-3xl font-bold">
+            Bs. {comisionEmpresa.toFixed(2)}
+          </div>
+          <div className="text-xs opacity-75 mt-1">
+            {((comisionEmpresa / totalIngresos) * 100).toFixed(1)}% de ingresos
+          </div>
+        </div>
+      </div>
+
+      {/* ==================== RESUMEN DE PAGOS ==================== */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-lg border-l-4 border-green-600">
+          <div className="text-gray-600 dark:text-gray-400 text-sm">
+            Total Pagado
+          </div>
+          <div className="text-3xl font-bold text-green-600 mt-2">
+            Bs. {totalPagado.toFixed(2)}
+          </div>
+          <div className="text-xs text-gray-500 mt-2">
+            {pagos.filter((p) => p.estado === "pagado").length} pagos
+            completados
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-lg border-l-4 border-orange-600">
+          <div className="text-gray-600 dark:text-gray-400 text-sm">
+            Total Pendiente
+          </div>
+          <div className="text-3xl font-bold text-orange-600 mt-2">
+            Bs. {totalPendiente.toFixed(2)}
+          </div>
+          <div className="text-xs text-gray-500 mt-2">
+            {pagos.filter((p) => p.estado === "pendiente").length} pagos
+            pendientes
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-lg border-l-4 border-blue-600">
+          <div className="text-gray-600 dark:text-gray-400 text-sm">
+            Comisión Empresa
+          </div>
+          <div className="text-3xl font-bold text-blue-600 mt-2">
+            Bs. {comisionEmpresa.toFixed(2)}
+          </div>
+          <div className="text-xs text-gray-500 mt-2">
+            Ganancia neta del período
+          </div>
+        </div>
+      </div>
+
+      {/* ==================== GRÁFICA DE INGRESOS EN EL TIEMPO ==================== */}
+      {ingresos.length > 0 && (
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-lg">
+          <h2 className="text-2xl font-bold mb-4">📈 Ingresos en el Tiempo</h2>
+          <div className="bg-gray-50 dark:bg-slate-800 p-4 rounded-lg">
+            <Line
+              data={chartIngresos}
+              options={{
+                responsive: true,
+                plugins: {
+                  legend: { position: "top" as const },
+                  title: { display: false },
+                },
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    ticks: { callback: (value) => `Bs. ${value}` },
+                  },
+                },
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* ==================== BITÁCORA ==================== */}
       {bitacora.length > 0 && (
