@@ -392,7 +392,9 @@ export const AnalisisUsuarios = () => {
                       <td className="p-2">
                         <span className="text-yellow-600 font-bold">
                           ⭐{" "}
-                          {(u.Tecnico?.calificacion_promedio || 0).toFixed(1)}
+                          {(
+                            Number(u.Tecnico?.calificacion_promedio) || 0
+                          ).toFixed(1)}
                         </span>
                       </td>
                       <td className="p-2">
