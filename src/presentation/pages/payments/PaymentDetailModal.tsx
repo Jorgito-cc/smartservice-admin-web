@@ -5,9 +5,8 @@ import {
   FaMoneyBillWave,
   FaMobileAlt,
 } from "react-icons/fa";
-import { useRef } from "react";
 import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
+import autoTable from "jspdf-autotable";
 
 interface PaymentDetailModalProps {
   payment: {
@@ -47,8 +46,6 @@ export default function PaymentDetailModal({
   payment,
   onClose,
 }: PaymentDetailModalProps) {
-  const contentRef = useRef<HTMLDivElement>(null);
-
   const getMetodoIcon = (metodo: string) => {
     switch (metodo) {
       case "tarjeta":
@@ -90,30 +87,132 @@ export default function PaymentDetailModal({
     payment.ServicioAsignado?.Tecnico?.Usuario?.nombre || "N/A"
   } ${payment.ServicioAsignado?.Tecnico?.Usuario?.apellido || ""}`;
 
-  const descargarComprobante = async () => {
-    if (!contentRef.current) return;
-
+  const descargarComprobante = () => {
     try {
-      // Convertir el contenido HTML a canvas
-      const canvas = await html2canvas(contentRef.current, {
-        scale: 2,
-        backgroundColor: "#ffffff",
-        allowTaint: true,
-        useCORS: true,
-      });
-
-      // Crear PDF
+      // Crear documento PDF
       const pdf = new jsPDF({
         orientation: "portrait",
         unit: "mm",
         format: "a4",
       });
 
-      const imgData = canvas.toDataURL("image/jpeg", 0.95); // Usar JPEG en lugar de PNG
-      const imgWidth = 190; // ancho máximo en mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      let yPosition = 15;
 
-      pdf.addImage(imgData, "JPEG", 10, 10, imgWidth, imgHeight);
+      // Título
+      pdf.setFontSize(18);
+      pdf.setFont(undefined, "bold");
+      pdf.text("COMPROBANTE DE PAGO", pageWidth / 2, yPosition, {
+        align: "center",
+      });
+
+      yPosition += 10;
+
+      // Número de comprobante
+      pdf.setFontSize(10);
+      pdf.setFont(undefined, "normal");
+      pdf.text(`Comprobante #${payment.id_pago}`, pageWidth / 2, yPosition, {
+        align: "center",
+      });
+
+      yPosition += 12;
+
+      // Tabla de información principal
+      autoTable(pdf, {
+        startY: yPosition,
+        head: [["Concepto", "Valor"]],
+        body: [
+          [
+            "Monto Total",
+            `Bs. ${parseFloat(payment.monto_total.toString()).toFixed(2)}`,
+          ],
+          ["Cliente", clienteNombre],
+          ["Técnico", tecnicoNombre],
+          [
+            "Fecha",
+            payment.fecha_pago
+              ? new Date(payment.fecha_pago).toLocaleDateString("es-BO")
+              : "N/A",
+          ],
+          ["Estado", payment.estado.toUpperCase()],
+          [
+            "Método de Pago",
+            payment.metodo_pago
+              ? payment.metodo_pago.charAt(0).toUpperCase() +
+                payment.metodo_pago.slice(1)
+              : "Tarjeta",
+          ],
+        ],
+        theme: "grid",
+        headStyles: {
+          fillColor: [51, 65, 85],
+          textColor: [255, 255, 255],
+          fontStyle: "bold",
+          fontSize: 11,
+        },
+        bodyStyles: {
+          textColor: [0, 0, 0],
+          fontSize: 10,
+        },
+        columnStyles: {
+          0: { cellWidth: 80 },
+          1: { cellWidth: 90, halign: "right" },
+        },
+        margin: { left: 10, right: 10 },
+      });
+
+      yPosition = (pdf as any).lastAutoTable.finalY + 15;
+
+      // Tabla de desglose de pagos
+      autoTable(pdf, {
+        startY: yPosition,
+        head: [["Concepto", "Monto (Bs.)"]],
+        body: [
+          [
+            "Comisión del Sistema",
+            parseFloat(payment.comision_empresa.toString()).toFixed(2),
+          ],
+          [
+            "Monto Técnico",
+            parseFloat(payment.monto_tecnico.toString()).toFixed(2),
+          ],
+          ["TOTAL", parseFloat(payment.monto_total.toString()).toFixed(2)],
+        ],
+        theme: "grid",
+        headStyles: {
+          fillColor: [79, 70, 229],
+          textColor: [255, 255, 255],
+          fontStyle: "bold",
+          fontSize: 11,
+        },
+        bodyStyles: {
+          textColor: [0, 0, 0],
+          fontSize: 10,
+        },
+        columnStyles: {
+          0: { cellWidth: 80 },
+          1: { cellWidth: 90, halign: "right" },
+        },
+        margin: { left: 10, right: 10 },
+      });
+
+      // Pie de página
+      yPosition = (pdf as any).lastAutoTable.finalY + 20;
+      pdf.setFontSize(8);
+      pdf.setFont(undefined, "italic");
+      pdf.setTextColor(100, 100, 100);
+      pdf.text("Documento generado automáticamente", pageWidth / 2, yPosition, {
+        align: "center",
+      });
+
+      pdf.setTextColor(0, 0, 0);
+      pdf.text(
+        `Fecha: ${new Date().toLocaleDateString("es-BO")}`,
+        pageWidth / 2,
+        yPosition + 5,
+        { align: "center" }
+      );
 
       // Descargar
       pdf.save(`comprobante-pago-${payment.id_pago}.pdf`);
@@ -134,103 +233,6 @@ export default function PaymentDetailModal({
         >
           <FaTimes />
         </button>
-
-        {/* Contenido del comprobante (para PDF) */}
-        <div ref={contentRef} className="hidden">
-          <div style={{ padding: "20px", backgroundColor: "white" }}>
-            <h2
-              style={{
-                fontSize: "18px",
-                fontWeight: "bold",
-                marginBottom: "15px",
-                textAlign: "center",
-              }}
-            >
-              COMPROBANTE DE PAGO #{payment.id_pago}
-            </h2>
-
-            <div style={{ fontSize: "12px", lineHeight: "1.8", color: "#333" }}>
-              <div
-                style={{
-                  marginBottom: "10px",
-                  paddingBottom: "10px",
-                  borderBottom: "1px solid #ddd",
-                }}
-              >
-                <p>
-                  <strong>Monto Total:</strong> Bs.{" "}
-                  {parseFloat(payment.monto_total.toString()).toFixed(2)}
-                </p>
-                <p>
-                  <strong>Cliente:</strong>{" "}
-                  {`${
-                    payment.ServicioAsignado?.SolicitudServicio?.Cliente
-                      ?.Usuario?.nombre ?? "N/A"
-                  } ${
-                    payment.ServicioAsignado?.SolicitudServicio?.Cliente
-                      ?.Usuario?.apellido ?? ""
-                  }`}
-                </p>
-                <p>
-                  <strong>Técnico:</strong> {tecnicoNombre || "N/A"}
-                </p>
-              </div>
-
-              <div
-                style={{
-                  marginBottom: "10px",
-                  paddingBottom: "10px",
-                  borderBottom: "1px solid #ddd",
-                }}
-              >
-                <p>
-                  <strong>Fecha:</strong>{" "}
-                  {payment.fecha_pago
-                    ? new Date(payment.fecha_pago).toLocaleDateString("es-BO")
-                    : "N/A"}
-                </p>
-                <p>
-                  <strong>Estado:</strong> {payment.estado}
-                </p>
-                <p>
-                  <strong>Método de Pago:</strong>{" "}
-                  {payment.metodo_pago
-                    ? payment.metodo_pago.charAt(0).toUpperCase() +
-                      payment.metodo_pago.slice(1)
-                    : "Tarjeta"}
-                </p>
-              </div>
-
-              <div
-                style={{
-                  marginBottom: "10px",
-                  paddingBottom: "10px",
-                  borderBottom: "1px solid #ddd",
-                }}
-              >
-                <p>
-                  <strong>Comisión del Sistema:</strong> Bs.{" "}
-                  {parseFloat(payment.comision_empresa.toString()).toFixed(2)}
-                </p>
-                <p>
-                  <strong>Monto Técnico:</strong> Bs.{" "}
-                  {parseFloat(payment.monto_tecnico.toString()).toFixed(2)}
-                </p>
-              </div>
-
-              <p
-                style={{
-                  marginTop: "10px",
-                  fontSize: "10px",
-                  color: "#666",
-                  textAlign: "center",
-                }}
-              >
-                Documento generado automáticamente
-              </p>
-            </div>
-          </div>
-        </div>
 
         {/* Contenido visible del modal */}
         <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-5 text-center">
