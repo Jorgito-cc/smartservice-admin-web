@@ -409,15 +409,6 @@ resolve: {
 
 ---
 
-## 🤝 Contribuir
-
-1. Fork el proyecto
-2. Crear rama feature (`git checkout -b feature/NewFeature`)
-3. Commit (`git commit -m 'Add NewFeature'`)
-4. Push (`git push origin feature/NewFeature`)
-5. Abrir Pull Request
-
----
 
 ## 📄 Licencia
 
@@ -431,12 +422,6 @@ Licencia **ISC**. Ver [LICENSE](LICENSE).
 
 ---
 
-## 📞 Soporte
-
-- 📧 Email: [tu-email@example.com](mailto:tu-email@example.com)
-- 🐛 Issues: [GitHub Issues](https://github.com/tuusuario/smartservice-admin-web/issues)
-
----
 
 **Última actualización:** Diciembre 2025
 
