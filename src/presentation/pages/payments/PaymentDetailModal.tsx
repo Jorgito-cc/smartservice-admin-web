@@ -5,8 +5,6 @@ import {
   FaMoneyBillWave,
   FaMobileAlt,
 } from "react-icons/fa";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 
 interface PaymentDetailModalProps {
   payment: {
@@ -76,151 +74,16 @@ export default function PaymentDetailModal({
     }
   };
 
-  const clienteNombre: string = `${
-    payment.ServicioAsignado?.SolicitudServicio?.Cliente?.Usuario?.nombre ??
+  const clienteNombre = `${
+    payment.ServicioAsignado?.SolicitudServicio?.Cliente?.Usuario?.nombre ||
     "N/A"
   } ${
-    payment.ServicioAsignado?.SolicitudServicio?.Cliente?.Usuario?.apellido ??
+    payment.ServicioAsignado?.SolicitudServicio?.Cliente?.Usuario?.apellido ||
     ""
   }`;
-  const tecnicoNombre: string = `${
-    payment.ServicioAsignado?.Tecnico?.Usuario?.nombre ?? "N/A"
-  } ${payment.ServicioAsignado?.Tecnico?.Usuario?.apellido ?? ""}`;
-
-  const descargarComprobante = () => {
-    try {
-      // Crear documento PDF
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
-      });
-
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      let yPosition = 15;
-
-      // Título
-      pdf.setFontSize(18);
-      pdf.setFont(undefined, "bold");
-      pdf.text("COMPROBANTE DE PAGO", pageWidth / 2, yPosition, {
-        align: "center",
-      });
-
-      yPosition += 10;
-
-      // Número de comprobante
-      pdf.setFontSize(10);
-      pdf.setFont(undefined, "normal");
-      pdf.text(`Comprobante #${payment.id_pago}`, pageWidth / 2, yPosition, {
-        align: "center",
-      });
-
-      yPosition += 12;
-
-      // Tabla de información principal
-      autoTable(pdf, {
-        startY: yPosition,
-        head: [["Concepto", "Valor"]],
-        body: [
-          [
-            "Monto Total",
-            `Bs. ${parseFloat(payment.monto_total.toString()).toFixed(2)}`,
-          ],
-          ["Cliente", clienteNombre],
-          ["Técnico", tecnicoNombre],
-          [
-            "Fecha",
-            payment.fecha_pago
-              ? new Date(payment.fecha_pago).toLocaleDateString("es-BO")
-              : "N/A",
-          ],
-          ["Estado", (payment.estado ?? "N/A").toUpperCase()],
-          [
-            "Método de Pago",
-            payment.metodo_pago
-              ? payment.metodo_pago.charAt(0).toUpperCase() +
-                payment.metodo_pago.slice(1)
-              : "Tarjeta",
-          ],
-        ],
-        theme: "grid",
-        headStyles: {
-          fillColor: [51, 65, 85],
-          textColor: [255, 255, 255],
-          fontStyle: "bold",
-          fontSize: 11,
-        },
-        bodyStyles: {
-          textColor: [0, 0, 0],
-          fontSize: 10,
-        },
-        columnStyles: {
-          0: { cellWidth: 80 },
-          1: { cellWidth: 90, halign: "right" },
-        },
-        margin: { left: 10, right: 10 },
-      });
-
-      yPosition = (pdf as any).lastAutoTable.finalY + 15;
-
-      // Tabla de desglose de pagos
-      autoTable(pdf, {
-        startY: yPosition,
-        head: [["Concepto", "Monto (Bs.)"]],
-        body: [
-          [
-            "Comisión del Sistema",
-            parseFloat(payment.comision_empresa.toString()).toFixed(2),
-          ],
-          [
-            "Monto Técnico",
-            parseFloat(payment.monto_tecnico.toString()).toFixed(2),
-          ],
-          ["TOTAL", parseFloat(payment.monto_total.toString()).toFixed(2)],
-        ],
-        theme: "grid",
-        headStyles: {
-          fillColor: [79, 70, 229],
-          textColor: [255, 255, 255],
-          fontStyle: "bold",
-          fontSize: 11,
-        },
-        bodyStyles: {
-          textColor: [0, 0, 0],
-          fontSize: 10,
-        },
-        columnStyles: {
-          0: { cellWidth: 80 },
-          1: { cellWidth: 90, halign: "right" },
-        },
-        margin: { left: 10, right: 10 },
-      });
-
-      // Pie de página
-      yPosition = (pdf as any).lastAutoTable.finalY + 20;
-      pdf.setFontSize(8);
-      pdf.setFont(undefined, "italic");
-      pdf.setTextColor(100, 100, 100);
-      pdf.text("Documento generado automáticamente", pageWidth / 2, yPosition, {
-        align: "center",
-      });
-
-      pdf.setTextColor(0, 0, 0);
-      pdf.text(
-        `Fecha: ${new Date().toLocaleDateString("es-BO")}`,
-        pageWidth / 2,
-        yPosition + 5,
-        { align: "center" }
-      );
-
-      // Descargar
-      pdf.save(`comprobante-pago-${payment.id_pago}.pdf`);
-    } catch (error) {
-      console.error("Error al generar PDF:", error);
-      alert("Error al descargar el comprobante");
-    }
-  };
+  const tecnicoNombre = `${
+    payment.ServicioAsignado?.Tecnico?.Usuario?.nombre || "N/A"
+  } ${payment.ServicioAsignado?.Tecnico?.Usuario?.apellido || ""}`;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
@@ -234,7 +97,6 @@ export default function PaymentDetailModal({
           <FaTimes />
         </button>
 
-        {/* Contenido visible del modal */}
         <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-5 text-center">
           Detalle de Pago #{payment.id_pago}
         </h2>
@@ -295,11 +157,8 @@ export default function PaymentDetailModal({
           >
             Cerrar
           </button>
-          <button
-            onClick={descargarComprobante}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-md transition flex items-center gap-2"
-          >
-            📥 Descargar PDF
+          <button className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-md transition">
+            Descargar comprobante
           </button>
         </div>
       </div>
