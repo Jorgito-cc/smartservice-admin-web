@@ -76,16 +76,16 @@ export default function PaymentDetailModal({
     }
   };
 
-  const clienteNombre = `${
-    payment.ServicioAsignado?.SolicitudServicio?.Cliente?.Usuario?.nombre ||
+  const clienteNombre: string = `${
+    payment.ServicioAsignado?.SolicitudServicio?.Cliente?.Usuario?.nombre ??
     "N/A"
   } ${
-    payment.ServicioAsignado?.SolicitudServicio?.Cliente?.Usuario?.apellido ||
+    payment.ServicioAsignado?.SolicitudServicio?.Cliente?.Usuario?.apellido ??
     ""
   }`;
-  const tecnicoNombre = `${
-    payment.ServicioAsignado?.Tecnico?.Usuario?.nombre || "N/A"
-  } ${payment.ServicioAsignado?.Tecnico?.Usuario?.apellido || ""}`;
+  const tecnicoNombre: string = `${
+    payment.ServicioAsignado?.Tecnico?.Usuario?.nombre ?? "N/A"
+  } ${payment.ServicioAsignado?.Tecnico?.Usuario?.apellido ?? ""}`;
 
   const descargarComprobante = () => {
     try {
@@ -135,7 +135,7 @@ export default function PaymentDetailModal({
               ? new Date(payment.fecha_pago).toLocaleDateString("es-BO")
               : "N/A",
           ],
-          ["Estado", payment.estado.toUpperCase()],
+          ["Estado", (payment.estado ?? "N/A").toUpperCase()],
           [
             "Método de Pago",
             payment.metodo_pago
