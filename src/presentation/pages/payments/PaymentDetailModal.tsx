@@ -86,7 +86,7 @@ export default function PaymentDetailModal({
     payment.ServicioAsignado?.Tecnico?.Usuario?.nombre || "N/A"
   } ${payment.ServicioAsignado?.Tecnico?.Usuario?.apellido || ""}`;
 
-  const descargarComprobante = () => {
+  const descargarComprobante = async () => {
     try {
       const doc = new jsPDF();
       let yPos = 10;
@@ -185,7 +185,16 @@ export default function PaymentDetailModal({
         align: "center",
       });
 
-      doc.save(`comprobante-pago-${payment.id_pago}.pdf`);
+      // Generar PDF como blob y descargar
+      const pdfBlob = doc.output("blob");
+      const url = URL.createObjectURL(pdfBlob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `comprobante-pago-${payment.id_pago}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Error al generar PDF:", error);
       alert("Error al descargar el comprobante");
