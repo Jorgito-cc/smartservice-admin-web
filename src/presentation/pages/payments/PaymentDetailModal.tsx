@@ -98,6 +98,8 @@ export default function PaymentDetailModal({
       const canvas = await html2canvas(contentRef.current, {
         scale: 2,
         backgroundColor: "#ffffff",
+        allowTaint: true,
+        useCORS: true,
       });
 
       // Crear PDF
@@ -107,11 +109,11 @@ export default function PaymentDetailModal({
         format: "a4",
       });
 
-      const imgData = canvas.toDataURL("image/png");
+      const imgData = canvas.toDataURL("image/jpeg", 0.95); // Usar JPEG en lugar de PNG
       const imgWidth = 190; // ancho máximo en mm
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-      pdf.addImage(imgData, "PNG", 10, 10, imgWidth, imgHeight);
+      pdf.addImage(imgData, "JPEG", 10, 10, imgWidth, imgHeight);
 
       // Descargar
       pdf.save(`comprobante-pago-${payment.id_pago}.pdf`);
