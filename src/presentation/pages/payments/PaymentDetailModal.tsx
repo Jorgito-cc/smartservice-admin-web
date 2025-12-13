@@ -5,6 +5,9 @@ import {
   FaMoneyBillWave,
   FaMobileAlt,
 } from "react-icons/fa";
+import { useRef } from "react";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 interface PaymentDetailModalProps {
   payment: {
@@ -44,6 +47,8 @@ export default function PaymentDetailModal({
   payment,
   onClose,
 }: PaymentDetailModalProps) {
+  const contentRef = useRef<HTMLDivElement>(null);
+
   const getMetodoIcon = (metodo: string) => {
     switch (metodo) {
       case "tarjeta":
@@ -85,6 +90,37 @@ export default function PaymentDetailModal({
     payment.ServicioAsignado?.Tecnico?.Usuario?.nombre || "N/A"
   } ${payment.ServicioAsignado?.Tecnico?.Usuario?.apellido || ""}`;
 
+  const descargarComprobante = async () => {
+    if (!contentRef.current) return;
+
+    try {
+      // Convertir el contenido HTML a canvas
+      const canvas = await html2canvas(contentRef.current, {
+        scale: 2,
+        backgroundColor: "#ffffff",
+      });
+
+      // Crear PDF
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const imgWidth = 190; // ancho máximo en mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      pdf.addImage(imgData, "PNG", 10, 10, imgWidth, imgHeight);
+
+      // Descargar
+      pdf.save(`comprobante-pago-${payment.id_pago}.pdf`);
+    } catch (error) {
+      console.error("Error al generar PDF:", error);
+      alert("Error al descargar el comprobante");
+    }
+  };
+
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
       <div className="bg-white dark:bg-slate-900 rounded-xl shadow-lg p-6 w-96 relative border border-indigo-100/70 dark:border-slate-700 animate-fade-in">
@@ -97,6 +133,102 @@ export default function PaymentDetailModal({
           <FaTimes />
         </button>
 
+        {/* Contenido del comprobante (para PDF) */}
+        <div ref={contentRef} className="hidden">
+          <div style={{ padding: "20px", backgroundColor: "white" }}>
+            <h2
+              style={{
+                fontSize: "18px",
+                fontWeight: "bold",
+                marginBottom: "15px",
+                textAlign: "center",
+              }}
+            >
+              COMPROBANTE DE PAGO #{payment.id_pago}
+            </h2>
+
+            <div style={{ fontSize: "12px", lineHeight: "1.8", color: "#333" }}>
+              <div
+                style={{
+                  marginBottom: "10px",
+                  paddingBottom: "10px",
+                  borderBottom: "1px solid #ddd",
+                }}
+              >
+                <p>
+                  <strong>Monto Total:</strong> Bs.{" "}
+                  {parseFloat(payment.monto_total.toString()).toFixed(2)}
+                </p>
+                <p>
+                  <strong>Cliente:</strong>{" "}
+                  {`${
+                    payment.ServicioAsignado?.SolicitudServicio?.Cliente
+                      ?.Usuario?.nombre || "N/A"
+                  } ${
+                    payment.ServicioAsignado?.SolicitudServicio?.Cliente
+                      ?.Usuario?.apellido || ""
+                  }`}
+                </p>
+                <p>
+                  <strong>Técnico:</strong> {tecnicoNombre}
+                </p>
+              </div>
+
+              <div
+                style={{
+                  marginBottom: "10px",
+                  paddingBottom: "10px",
+                  borderBottom: "1px solid #ddd",
+                }}
+              >
+                <p>
+                  <strong>Fecha:</strong>{" "}
+                  {payment.fecha_pago
+                    ? new Date(payment.fecha_pago).toLocaleDateString("es-BO")
+                    : "N/A"}
+                </p>
+                <p>
+                  <strong>Estado:</strong> {payment.estado}
+                </p>
+                <p>
+                  <strong>Método de Pago:</strong>{" "}
+                  {payment.metodo_pago?.charAt(0).toUpperCase() +
+                    payment.metodo_pago?.slice(1) || "Tarjeta"}
+                </p>
+              </div>
+
+              <div
+                style={{
+                  marginBottom: "10px",
+                  paddingBottom: "10px",
+                  borderBottom: "1px solid #ddd",
+                }}
+              >
+                <p>
+                  <strong>Comisión del Sistema:</strong> Bs.{" "}
+                  {parseFloat(payment.comision_empresa.toString()).toFixed(2)}
+                </p>
+                <p>
+                  <strong>Monto Técnico:</strong> Bs.{" "}
+                  {parseFloat(payment.monto_tecnico.toString()).toFixed(2)}
+                </p>
+              </div>
+
+              <p
+                style={{
+                  marginTop: "10px",
+                  fontSize: "10px",
+                  color: "#666",
+                  textAlign: "center",
+                }}
+              >
+                Documento generado automáticamente
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Contenido visible del modal */}
         <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-5 text-center">
           Detalle de Pago #{payment.id_pago}
         </h2>
@@ -157,8 +289,11 @@ export default function PaymentDetailModal({
           >
             Cerrar
           </button>
-          <button className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-md transition">
-            Descargar comprobante
+          <button
+            onClick={descargarComprobante}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-md transition flex items-center gap-2"
+          >
+            📥 Descargar PDF
           </button>
         </div>
       </div>
