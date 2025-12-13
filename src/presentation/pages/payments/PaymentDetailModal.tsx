@@ -135,9 +135,9 @@ export default function PaymentDetailModal({
       yPos += 6;
       tableData1.forEach((row, index) => {
         if (index === 0) {
-          doc.setFont(undefined, "bold");
+          doc.setFont("helvetica", "bold");
         } else {
-          doc.setFont(undefined, "normal");
+          doc.setFont("helvetica", "normal");
         }
         doc.text(row[0], 20, yPos);
         doc.text(row[1], 150, yPos, { align: "right" });
@@ -161,17 +161,17 @@ export default function PaymentDetailModal({
       ];
 
       doc.rect(14, yPos - 5, 182, 28);
-      doc.setFont(undefined, "bold");
+      doc.setFont("helvetica", "bold");
       doc.text("Desglose de Pago", 15, yPos);
 
       yPos += 6;
       tableData2.forEach((row, index) => {
         if (index === 0) {
-          doc.setFont(undefined, "bold");
+          doc.setFont("helvetica", "bold");
         } else if (index === tableData2.length - 1) {
-          doc.setFont(undefined, "bold");
+          doc.setFont("helvetica", "bold");
         } else {
-          doc.setFont(undefined, "normal");
+          doc.setFont("helvetica", "normal");
         }
         doc.text(row[0], 20, yPos);
         doc.text(row[1], 150, yPos, { align: "right" });
@@ -179,7 +179,7 @@ export default function PaymentDetailModal({
       });
 
       yPos += 10;
-      doc.setFont(undefined, "normal");
+      doc.setFont("helvetica", "normal");
       doc.setFontSize(8);
       doc.text("Documento generado automáticamente", 105, yPos, {
         align: "center",
