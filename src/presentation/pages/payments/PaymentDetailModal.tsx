@@ -5,6 +5,7 @@ import {
   FaMoneyBillWave,
   FaMobileAlt,
 } from "react-icons/fa";
+import jsPDF from "jspdf";
 
 interface PaymentDetailModalProps {
   payment: {
@@ -85,6 +86,112 @@ export default function PaymentDetailModal({
     payment.ServicioAsignado?.Tecnico?.Usuario?.nombre || "N/A"
   } ${payment.ServicioAsignado?.Tecnico?.Usuario?.apellido || ""}`;
 
+  const descargarComprobante = () => {
+    try {
+      const doc = new jsPDF();
+      let yPos = 10;
+
+      // Título
+      doc.setFontSize(16);
+      doc.text("COMPROBANTE DE PAGO", 105, yPos, { align: "center" });
+
+      yPos += 8;
+      doc.setFontSize(10);
+      doc.text(`Comprobante #${payment.id_pago}`, 105, yPos, {
+        align: "center",
+      });
+
+      yPos += 15;
+
+      // Tabla de datos principales
+      const tableData1 = [
+        ["Concepto", "Valor"],
+        [
+          "Monto Total",
+          `Bs. ${parseFloat(payment.monto_total.toString()).toFixed(2)}`,
+        ],
+        ["Cliente", clienteNombre],
+        ["Técnico", tecnicoNombre],
+        [
+          "Fecha",
+          payment.fecha_pago
+            ? new Date(payment.fecha_pago).toLocaleDateString("es-BO")
+            : "N/A",
+        ],
+        ["Estado", (payment.estado || "N/A").toUpperCase()],
+        [
+          "Método de Pago",
+          payment.metodo_pago
+            ? payment.metodo_pago.charAt(0).toUpperCase() +
+              payment.metodo_pago.slice(1)
+            : "Tarjeta",
+        ],
+      ];
+
+      doc.setFontSize(10);
+      doc.rect(14, yPos - 5, 182, 50);
+      doc.text("Información Principal", 15, yPos);
+
+      yPos += 6;
+      tableData1.forEach((row, index) => {
+        if (index === 0) {
+          doc.setFont(undefined, "bold");
+        } else {
+          doc.setFont(undefined, "normal");
+        }
+        doc.text(row[0], 20, yPos);
+        doc.text(row[1], 150, yPos, { align: "right" });
+        yPos += 6;
+      });
+
+      yPos += 10;
+
+      // Tabla de desglose
+      const tableData2 = [
+        ["Concepto", "Monto (Bs.)"],
+        [
+          "Comisión del Sistema",
+          parseFloat(payment.comision_empresa.toString()).toFixed(2),
+        ],
+        [
+          "Monto Técnico",
+          parseFloat(payment.monto_tecnico.toString()).toFixed(2),
+        ],
+        ["TOTAL", parseFloat(payment.monto_total.toString()).toFixed(2)],
+      ];
+
+      doc.rect(14, yPos - 5, 182, 28);
+      doc.setFont(undefined, "bold");
+      doc.text("Desglose de Pago", 15, yPos);
+
+      yPos += 6;
+      tableData2.forEach((row, index) => {
+        if (index === 0) {
+          doc.setFont(undefined, "bold");
+        } else if (index === tableData2.length - 1) {
+          doc.setFont(undefined, "bold");
+        } else {
+          doc.setFont(undefined, "normal");
+        }
+        doc.text(row[0], 20, yPos);
+        doc.text(row[1], 150, yPos, { align: "right" });
+        yPos += 6;
+      });
+
+      yPos += 10;
+      doc.setFont(undefined, "normal");
+      doc.setFontSize(8);
+      doc.text("Documento generado automáticamente", 105, yPos, {
+        align: "center",
+      });
+
+      doc.save(`comprobante-pago-${payment.id_pago}.pdf`);
+    } catch (error) {
+      console.error("Error al generar PDF:", error);
+      alert("Error al descargar el comprobante");
+    }
+  };
+
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
       <div className="bg-white dark:bg-slate-900 rounded-xl shadow-lg p-6 w-96 relative border border-indigo-100/70 dark:border-slate-700 animate-fade-in">
@@ -157,8 +264,11 @@ export default function PaymentDetailModal({
           >
             Cerrar
           </button>
-          <button className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-md transition">
-            Descargar comprobante
+          <button
+            onClick={descargarComprobante}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-md transition flex items-center gap-2"
+          >
+            📥 Descargar PDF
           </button>
         </div>
       </div>
