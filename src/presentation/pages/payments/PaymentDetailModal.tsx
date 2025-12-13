@@ -163,14 +163,14 @@ export default function PaymentDetailModal({
                   <strong>Cliente:</strong>{" "}
                   {`${
                     payment.ServicioAsignado?.SolicitudServicio?.Cliente
-                      ?.Usuario?.nombre || "N/A"
+                      ?.Usuario?.nombre ?? "N/A"
                   } ${
                     payment.ServicioAsignado?.SolicitudServicio?.Cliente
-                      ?.Usuario?.apellido || ""
+                      ?.Usuario?.apellido ?? ""
                   }`}
                 </p>
                 <p>
-                  <strong>Técnico:</strong> {tecnicoNombre}
+                  <strong>Técnico:</strong> {tecnicoNombre || "N/A"}
                 </p>
               </div>
 
@@ -192,8 +192,10 @@ export default function PaymentDetailModal({
                 </p>
                 <p>
                   <strong>Método de Pago:</strong>{" "}
-                  {payment.metodo_pago?.charAt(0).toUpperCase() +
-                    payment.metodo_pago?.slice(1) || "Tarjeta"}
+                  {payment.metodo_pago
+                    ? payment.metodo_pago.charAt(0).toUpperCase() +
+                      payment.metodo_pago.slice(1)
+                    : "Tarjeta"}
                 </p>
               </div>
 
